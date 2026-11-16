@@ -14,7 +14,7 @@
 
 - Everything is written in English: code, comments, docs, UI strings and commit messages.
 - Repository `pyxel-dev/HA-controller`. Product name "HA Controller". Integration domain `ha_controller`. ESPHome project `pyxel-dev.ha-controller`.
-- Python 3.14, pytest, ruff.
+- Python 3.14, pytest, ruff. The repository checks run in their own venv `.github/scripts/.venv`, installed from `.github/scripts/requirements.txt`.
 - Layout model and protocol v1 exactly as spec §6–§7. Golden revisions: `c4aad3fa` (empty), `90538742` (reference), `5387d4ea` (emoji-variation).
 - `3D_models/` and `files/` stay untouched.
 

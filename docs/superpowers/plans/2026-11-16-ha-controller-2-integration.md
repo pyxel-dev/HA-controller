@@ -17,6 +17,7 @@
 
 - Domain `ha_controller`, name "HA Controller", `MANUFACTURER = "pyxel-dev"`, `MODEL = "ha-controller"`.
 - Minimum Home Assistant 2026.10.0. Python 3.14.
+- **Python environment:** the integration has its own venv `custom_components/.venv`. Create it with `python3.14 -m venv custom_components/.venv`, install `custom_components/requirements_test.txt`, and run pytest and ruff from it. The repository checks keep their own venv, `.github/scripts/.venv`.
 - Protocol v1 and constants exactly as spec §6, §7 and §15, defined once in `const.py`.
 - Events: `esphome.ha_controller_hello` and `esphome.ha_controller_control`. Services: `esphome.<node with "-" → "_">_<action>`. The integration never registers its own services.
 - No blocking I/O in the event loop. Read `emoji.json` with `hass.async_add_executor_job`.

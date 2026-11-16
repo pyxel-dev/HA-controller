@@ -25,6 +25,10 @@
 - **Release assets:** `ha_controller.zip`, `ha-controller-<v>.factory.bin`, `ha-controller-<v>.ota.bin`, `ha-controller-<v>.ota.bin.md5`. The `.md5` file holds exactly 32 lowercase hex characters and no newline.
 - **Timings:** install timeout 300 s; auto-update at most once per screen and version every 3600 s; auto-update only when the integration version matches `^\d+\.\d+\.\d+$`.
 - **Strings:** English only.
+- **Python environments:**
+  - release scripts and their tests: `.github/scripts/.venv`;
+  - integration tests: `custom_components/.venv`;
+  - ESPHome: `esphome/.venv`.
 
 ## Review Focus
 
