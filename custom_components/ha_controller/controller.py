@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
 
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -49,11 +50,16 @@ class DeviceStatus:
         return self.last_seen is not None and dt_util.utcnow() - self.last_seen <= ONLINE_TIMEOUT
 
 
+def format_layout_errors(errors: list[LayoutError]) -> str:
+    """Format errors as `code@ref` (empty ref when None), comma separated."""
+    return ", ".join(f"{e.code}@{e.ref or ''}" for e in errors)
+
+
 class InvalidLayout(HomeAssistantError):
     """Raised when a layout cannot be saved."""
 
     def __init__(self, errors: list[LayoutError]) -> None:
-        super().__init__(", ".join(f"{e.code}@{e.ref}" for e in errors))
+        super().__init__(format_layout_errors(errors))
         self.errors = errors
 
 
@@ -89,6 +95,7 @@ class ScreenController:
         self._unsub_states: CALLBACK_TYPE | None = None
         self._cancel_flush: CALLBACK_TYPE | None = None
         self._pending: set[str] = set()
+        self._first_hello_seen = False
 
     @property
     def device_id(self) -> str:
@@ -119,7 +126,7 @@ class ScreenController:
                 _LOGGER.warning(
                     "Ignoring invalid stored layout for %s: %s",
                     self.entry.title,
-                    ", ".join(f"{e.code}@{e.ref}" for e in errors),
+                    format_layout_errors(errors),
                 )
             else:
                 self._set_layout(stored)
@@ -228,7 +235,9 @@ class ScreenController:
             cb()
         if self._device.protocol != PROTOCOL_VERSION:
             return
-        connected = data.get("reason") == REASON_CONNECTED
+        first_hello = not self._first_hello_seen
+        self._first_hello_seen = True
+        connected = data.get("reason") == REASON_CONNECTED or first_hello
         if revision != self.revision:
             if connected or not self._recently_pushed():
                 await self.async_push_layout()
@@ -268,7 +277,7 @@ class ScreenController:
         service = f"{node.replace('-', '_')}_{action}"
         try:
             await self.hass.services.async_call("esphome", service, data, blocking=True)
-        except HomeAssistantError as err:
+        except (HomeAssistantError, vol.Invalid) as err:
             _LOGGER.warning("Calling esphome.%s failed: %s", service, err)
             return False
         return True

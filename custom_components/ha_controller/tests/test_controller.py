@@ -3,6 +3,7 @@
 import json
 from datetime import timedelta
 
+import voluptuous as vol
 from homeassistant.exceptions import HomeAssistantError
 from pytest_homeassistant_custom_component.common import (
     MockConfigEntry,
@@ -60,9 +61,22 @@ async def test_hello_connected_with_current_revision_pushes_states_only(hass):
 async def test_heartbeat_with_current_revision_pushes_nothing(hass):
     layouts, states = mock_screen(hass)
     device, _, _ = await start(hass)
+    await send_hello(hass, device, revision=REFERENCE_REV, reason="heartbeat")  # first hello
+    states.clear()
     await send_hello(hass, device, revision=REFERENCE_REV, reason="heartbeat")
     assert layouts == []
     assert states == []
+
+
+async def test_first_hello_after_start_pushes_states(hass):
+    layouts, states = mock_screen(hass)
+    device, _, _ = await start(hass)
+    await send_hello(hass, device, revision=REFERENCE_REV, reason="heartbeat")
+    assert layouts == []
+    assert len(states) == 1
+    await send_hello(hass, device, revision=REFERENCE_REV, reason="heartbeat")
+    assert layouts == []
+    assert len(states) == 1
 
 
 async def test_stale_revision_is_retried_at_most_every_300s(hass, freezer):
@@ -102,6 +116,7 @@ async def test_state_changes_are_coalesced(hass, freezer):
     _, states = mock_screen(hass)
     device, _, _ = await start(hass)
     await send_hello(hass, device, revision=REFERENCE_REV, reason="heartbeat")
+    states.clear()
     hass.states.async_set("light.kitchen", "on", {"brightness": 255})
     freezer.tick(timedelta(milliseconds=100))
     hass.states.async_set("light.living_room", "on", {"brightness": 255})
@@ -119,6 +134,7 @@ async def test_state_change_not_pushed_when_offline(hass, freezer):
     _, states = mock_screen(hass)
     device, _, _ = await start(hass)
     await send_hello(hass, device, revision=REFERENCE_REV, reason="heartbeat")
+    states.clear()
     freezer.tick(timedelta(seconds=151))
     hass.states.async_set("light.kitchen", "on", {"brightness": 255})
     freezer.tick(timedelta(seconds=1))
@@ -273,3 +289,58 @@ async def test_status_reports_device(hass):
         "device_revision": REFERENCE_REV,
     }
     assert controller.device.node == NODE
+
+
+async def test_service_schema_error_is_logged_not_raised(hass, caplog):
+    hass.services.async_register(
+        "esphome",
+        "ha_controller_aabbcc_set_layout",
+        lambda call: None,
+        schema=vol.Schema({vol.Required("other"): str}),
+    )
+    device, _, controller = await start(hass, saved=False)
+    await send_hello(hass, device, revision="none", reason="heartbeat")
+    result = await controller.async_save_layout(load_layout("reference"))
+    assert result == (REFERENCE_REV, False)
+    assert "ha_controller_aabbcc_set_layout" in caplog.text
+
+
+def test_invalid_layout_message_format():
+    assert str(InvalidLayout([LayoutError("payload_too_large", None)])) == "payload_too_large@"
+    errors = [LayoutError("invalid_name", "b2"), LayoutError("disconnected", "b4")]
+    assert str(InvalidLayout(errors)) == "invalid_name@b2, disconnected@b4"
+
+
+async def test_new_revision_is_pushed_despite_recent_push(hass, freezer):
+    layouts, _ = mock_screen(hass)
+    device, _, controller = await start(hass, saved=False)
+    layout_a = load_layout("reference")
+    await controller.async_save_layout(layout_a)
+    await send_hello(hass, device, revision="none", reason="heartbeat")
+    assert len(layouts) == 1
+    freezer.tick(timedelta(seconds=151))
+    layout_b = json.loads(json.dumps(layout_a))
+    layout_b["blocks"] = layout_b["blocks"][:-1]
+    _, pushed = await controller.async_save_layout(layout_b)
+    assert pushed is False
+    assert controller.revision != REFERENCE_REV
+    assert len(layouts) == 1
+    freezer.tick(timedelta(seconds=1))
+    await send_hello(hass, device, revision=REFERENCE_REV, reason="heartbeat")
+    assert len(layouts) == 2
+    assert json.loads(layouts[1].data["layout"])["rev"] == controller.revision
+
+
+async def test_stop_cancels_pending_flush(hass, freezer):
+    _, states = mock_screen(hass)
+    device, entry, _ = await start(hass)
+    await send_hello(hass, device, revision=REFERENCE_REV, reason="heartbeat")
+    states.clear()
+    hass.states.async_set("light.kitchen", "on", {"brightness": 255})
+    await hass.async_block_till_done()
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert states == []
