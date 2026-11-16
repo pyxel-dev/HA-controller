@@ -1,6 +1,6 @@
 import type {Block, Cell, Layout} from "../types";
+import {COORD_LIMIT, MAX_BLOCKS} from "./limits";
 
-const LIMIT = 32;
 const DIRECTIONS: readonly Cell[] = [
   {x: 1, y: 0},
   {x: -1, y: 0},
@@ -14,14 +14,14 @@ const key = (x: number, y: number): string => `${x},${y}`;
 export function placeholders(layout: Layout): Cell[] {
   const {blocks} = layout;
   if (blocks.length === 0) return [{x: 0, y: 0}];
-  if (blocks.length >= LIMIT) return [];
+  if (blocks.length >= MAX_BLOCKS) return [];
   const taken = new Set(blocks.map((b) => key(b.x, b.y)));
   const found = new Map<string, Cell>();
   for (const block of blocks) {
     for (const d of DIRECTIONS) {
       const x = block.x + d.x;
       const y = block.y + d.y;
-      if (Math.abs(x) > LIMIT || Math.abs(y) > LIMIT) continue;
+      if (Math.abs(x) > COORD_LIMIT || Math.abs(y) > COORD_LIMIT) continue;
       const k = key(x, y);
       if (!taken.has(k)) found.set(k, {x, y});
     }

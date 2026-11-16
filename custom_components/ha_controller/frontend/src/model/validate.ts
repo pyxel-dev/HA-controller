@@ -1,13 +1,11 @@
 import type {Block, LayoutError} from "../types";
 import {normalizeEmoji} from "./emoji";
 import {reachable} from "./grid";
+import {COORD_LIMIT, MAX_BLOCKS, MAX_ITEMS} from "./limits";
 
-const MAX_BLOCKS = 32;
-const MAX_ITEMS = 6;
 const MAX_NAME_LEN = 32;
 const MAX_TEXT_LEN = 64;
 const MAX_ATTRIBUTE_LEN = 64;
-const COORD_LIMIT = 32;
 const MIN_SLEEP_TIMEOUT = 5;
 const MAX_SLEEP_TIMEOUT = 3600;
 const FONT_SIZES = ["s", "m", "l", "xl"];
