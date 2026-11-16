@@ -1,0 +1,14 @@
+{
+  "layout": "reference",
+  "unit": "°C",
+  "entity_ids": [
+    "sensor.outdoor_temperature"
+  ],
+  "hass_states": {},
+  "updates": [
+    {
+      "id": "i3",
+      "text": "—"
+    }
+  ]
+}

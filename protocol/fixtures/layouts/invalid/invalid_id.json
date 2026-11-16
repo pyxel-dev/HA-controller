@@ -1,0 +1,85 @@
+{
+  "expect": {
+    "code": "invalid_id",
+    "ref": "B4"
+  },
+  "layout": {
+    "version": 1,
+    "start": "b1",
+    "settings": {
+      "sleep_timeout": 20
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 0,
+        "name": "Kitchen",
+        "background": "#5B9E4D",
+        "font_size": "m",
+        "type": "entity",
+        "entity_id": "light.kitchen"
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": -1,
+        "name": "Lights",
+        "background": "#C94F3D",
+        "font_size": "m",
+        "type": "entity",
+        "entity_id": "light.living_room"
+      },
+      {
+        "id": "b3",
+        "x": -1,
+        "y": 0,
+        "name": "Hello World",
+        "background": "#4F86DD",
+        "font_size": "l",
+        "type": "custom",
+        "items": [
+          {
+            "id": "i1",
+            "kind": "text",
+            "text": "Hello World",
+            "font_size": null
+          },
+          {
+            "id": "i2",
+            "kind": "emoji",
+            "emoji": "👋",
+            "font_size": "xl"
+          },
+          {
+            "id": "i3",
+            "kind": "entity",
+            "entity_id": "sensor.outdoor_temperature",
+            "attribute": null,
+            "font_size": "s"
+          },
+          {
+            "id": "i4",
+            "kind": "battery",
+            "font_size": "s"
+          },
+          {
+            "id": "i5",
+            "kind": "brightness",
+            "font_size": null
+          }
+        ]
+      },
+      {
+        "id": "B4",
+        "x": -1,
+        "y": 1,
+        "name": "Bedroom",
+        "background": "#7B2FA0",
+        "font_size": "m",
+        "type": "entity",
+        "entity_id": "climate.bedroom"
+      }
+    ]
+  }
+}

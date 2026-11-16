@@ -1,0 +1,76 @@
+{
+  "layout": "reference",
+  "payload": {
+    "v": 1,
+    "rev": "90538742",
+    "start": "b1",
+    "sleep": 20,
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 0,
+        "name": "Kitchen",
+        "bg": "5B9E4D",
+        "font": "m",
+        "widget": "light"
+      },
+      {
+        "id": "b2",
+        "x": 0,
+        "y": -1,
+        "name": "Lights",
+        "bg": "C94F3D",
+        "font": "m",
+        "widget": "light"
+      },
+      {
+        "id": "b3",
+        "x": -1,
+        "y": 0,
+        "name": "Hello World",
+        "bg": "4F86DD",
+        "font": "l",
+        "widget": "custom",
+        "items": [
+          {
+            "id": "i1",
+            "kind": "text",
+            "text": "Hello World",
+            "font": "l"
+          },
+          {
+            "id": "i2",
+            "kind": "emoji",
+            "text": "👋",
+            "font": "xl"
+          },
+          {
+            "id": "i3",
+            "kind": "entity",
+            "font": "s"
+          },
+          {
+            "id": "i4",
+            "kind": "battery",
+            "font": "s"
+          },
+          {
+            "id": "i5",
+            "kind": "brightness",
+            "font": "l"
+          }
+        ]
+      },
+      {
+        "id": "b4",
+        "x": -1,
+        "y": 1,
+        "name": "Bedroom",
+        "bg": "7B2FA0",
+        "font": "m",
+        "widget": "climate"
+      }
+    ]
+  }
+}

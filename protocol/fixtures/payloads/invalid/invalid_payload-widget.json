@@ -1,0 +1,4 @@
+{
+  "expect": "invalid_payload",
+  "text": "{\"v\":1,\"rev\":\"x\",\"start\":\"b1\",\"sleep\":20,\"blocks\":[{\"id\":\"b1\",\"x\":0,\"y\":0,\"name\":\"A\",\"bg\":\"000000\",\"font\":\"m\",\"widget\":\"gauge\"}]}"
+}

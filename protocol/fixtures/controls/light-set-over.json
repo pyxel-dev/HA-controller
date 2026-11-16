@@ -1,0 +1,18 @@
+{
+  "layout": "reference",
+  "hass_states": {},
+  "event": {
+    "block": "b2",
+    "item": "",
+    "op": "set",
+    "value": "150"
+  },
+  "expect_call": {
+    "domain": "light",
+    "service": "turn_on",
+    "data": {
+      "entity_id": "light.living_room",
+      "brightness_pct": 100
+    }
+  }
+}

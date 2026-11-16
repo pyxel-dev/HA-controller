@@ -1,0 +1,345 @@
+{
+  "expect": {
+    "code": "too_many_blocks",
+    "ref": null
+  },
+  "layout": {
+    "version": 1,
+    "start": "b1",
+    "settings": {
+      "sleep_timeout": 20
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 0,
+        "name": "Block 1",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b2",
+        "x": 1,
+        "y": 0,
+        "name": "Block 2",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b3",
+        "x": 2,
+        "y": 0,
+        "name": "Block 3",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b4",
+        "x": 3,
+        "y": 0,
+        "name": "Block 4",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b5",
+        "x": 4,
+        "y": 0,
+        "name": "Block 5",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b6",
+        "x": 5,
+        "y": 0,
+        "name": "Block 6",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b7",
+        "x": 6,
+        "y": 0,
+        "name": "Block 7",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b8",
+        "x": 7,
+        "y": 0,
+        "name": "Block 8",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b9",
+        "x": 8,
+        "y": 0,
+        "name": "Block 9",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b10",
+        "x": 9,
+        "y": 0,
+        "name": "Block 10",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b11",
+        "x": 10,
+        "y": 0,
+        "name": "Block 11",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b12",
+        "x": 11,
+        "y": 0,
+        "name": "Block 12",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b13",
+        "x": 12,
+        "y": 0,
+        "name": "Block 13",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b14",
+        "x": 13,
+        "y": 0,
+        "name": "Block 14",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b15",
+        "x": 14,
+        "y": 0,
+        "name": "Block 15",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b16",
+        "x": 15,
+        "y": 0,
+        "name": "Block 16",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b17",
+        "x": 16,
+        "y": 0,
+        "name": "Block 17",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b18",
+        "x": 17,
+        "y": 0,
+        "name": "Block 18",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b19",
+        "x": 18,
+        "y": 0,
+        "name": "Block 19",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b20",
+        "x": 19,
+        "y": 0,
+        "name": "Block 20",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b21",
+        "x": 20,
+        "y": 0,
+        "name": "Block 21",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b22",
+        "x": 21,
+        "y": 0,
+        "name": "Block 22",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b23",
+        "x": 22,
+        "y": 0,
+        "name": "Block 23",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b24",
+        "x": 23,
+        "y": 0,
+        "name": "Block 24",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b25",
+        "x": 24,
+        "y": 0,
+        "name": "Block 25",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b26",
+        "x": 25,
+        "y": 0,
+        "name": "Block 26",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b27",
+        "x": 26,
+        "y": 0,
+        "name": "Block 27",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b28",
+        "x": 27,
+        "y": 0,
+        "name": "Block 28",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b29",
+        "x": 28,
+        "y": 0,
+        "name": "Block 29",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b30",
+        "x": 29,
+        "y": 0,
+        "name": "Block 30",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b31",
+        "x": 30,
+        "y": 0,
+        "name": "Block 31",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b32",
+        "x": 31,
+        "y": 0,
+        "name": "Block 32",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      },
+      {
+        "id": "b33",
+        "x": 32,
+        "y": 0,
+        "name": "Block 33",
+        "background": "#000000",
+        "font_size": "m",
+        "type": "custom",
+        "items": []
+      }
+    ]
+  }
+}

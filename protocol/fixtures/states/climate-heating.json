@@ -1,0 +1,33 @@
+{
+  "layout": "reference",
+  "unit": "°C",
+  "entity_ids": [
+    "climate.bedroom"
+  ],
+  "hass_states": {
+    "climate.bedroom": {
+      "state": "heat",
+      "attributes": {
+        "temperature": 20.5,
+        "current_temperature": 19.8,
+        "min_temp": 7,
+        "max_temp": 35,
+        "target_temp_step": 0.5,
+        "hvac_action": "heating"
+      }
+    }
+  },
+  "updates": [
+    {
+      "id": "b4",
+      "available": true,
+      "target": 20.5,
+      "min": 7,
+      "max": 35,
+      "step": 0.5,
+      "unit": "°C",
+      "current": "19.8 °C",
+      "action": "Heating"
+    }
+  ]
+}

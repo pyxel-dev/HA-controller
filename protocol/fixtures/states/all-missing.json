@@ -1,0 +1,24 @@
+{
+  "layout": "reference",
+  "unit": "°C",
+  "entity_ids": null,
+  "hass_states": {},
+  "updates": [
+    {
+      "id": "b1",
+      "available": false
+    },
+    {
+      "id": "b2",
+      "available": false
+    },
+    {
+      "id": "i3",
+      "text": "—"
+    },
+    {
+      "id": "b4",
+      "available": false
+    }
+  ]
+}

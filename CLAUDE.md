@@ -38,3 +38,5 @@ It is a custom integration with a sidebar panel, an ESPHome firmware and a GitHu
 
 ## Skills and agents
 
+- Skill `protocol-change` (`.claude/skills/protocol-change/`): checklist for any change that crosses the Home Assistant ↔ screen boundary.
+- Agent `protocol-guardian` (`.claude/agents/protocol-guardian.md`): reviews a diff for protocol consistency across docs, fixtures, Python, TypeScript and C++.

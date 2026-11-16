@@ -1,0 +1,11 @@
+{
+  "layout": "reference",
+  "hass_states": {},
+  "event": {
+    "block": "b4",
+    "item": "",
+    "op": "toggle",
+    "value": "0.00"
+  },
+  "expect_call": null
+}

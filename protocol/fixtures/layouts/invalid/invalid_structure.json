@@ -1,0 +1,14 @@
+{
+  "expect": {
+    "code": "invalid_structure",
+    "ref": null
+  },
+  "layout": {
+    "version": 1,
+    "start": "b1",
+    "settings": {
+      "sleep_timeout": 20
+    },
+    "blocks": {}
+  }
+}
