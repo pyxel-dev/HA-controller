@@ -288,7 +288,7 @@ An unavailable or missing entity sends `{"id": …, "available": false}`. Entity
 - **On a hello from the screen's `device_id`:** record the node, version, protocol, revision and time. Then:
   - If `protocol ≠ 1`, push nothing (auto-update may run, §11).
   - Else, if `revision ≠` the current revision, push the layout and then all states. Push immediately when `reason = connected`. Otherwise push at most once per 300 s for the same revision.
-  - Else, if `reason = connected`, push all states.
+  - Else, if `reason = connected`, or this is the first hello since the integration (re)started, push all states. After an integration reload the ESPHome connection stays up, so no `connected` hello arrives.
 - **Entity state changes:** coalesced for 200 ms, then pushed for the changed entities. This only happens while the screen is online (a hello within the last 150 s) and on protocol 1.
 - **Saving a layout:** pushes it immediately if the screen is online.
 
