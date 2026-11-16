@@ -3,8 +3,8 @@
 import re
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-DOC_ROOTS = ["README.md", "CLAUDE.md", "docs"]  # docs/superpowers/** is excluded
+ROOT = Path(__file__).resolve().parents[3]
+DOC_ROOTS = ["README.md", ".claude/CLAUDE.md", "docs"]  # docs/superpowers/** is excluded
 EXCLUDED = ROOT / "docs" / "superpowers"
 LINK_RE = re.compile(r"\[[^\]]*\]\(([^)\s]+)(?:\s+\"[^\"]*\")?\)")
 EXTERNAL_PREFIXES = ("http://", "https://", "mailto:", "#")
@@ -41,7 +41,11 @@ def test_docs_index_lists_every_doc():
         for t in LINK_RE.findall(index.read_text(encoding="utf-8"))
         if not t.startswith(EXTERNAL_PREFIXES)
     }
+    docs = ROOT / "docs"
+    candidates = [*docs.glob("*.md"), *docs.glob("*/README.md")]
     missing = [
-        p.name for p in (ROOT / "docs").glob("*.md") if p != index and p.resolve() not in linked
+        str(p.relative_to(docs))
+        for p in candidates
+        if p != index and EXCLUDED not in p.parents and p.resolve() not in linked
     ]
     assert not missing, f"Docs not linked from docs/README.md: {missing}"

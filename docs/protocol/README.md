@@ -2,7 +2,7 @@
 
 ## 6. Layout model (integration and panel)
 
-The layout is stored per screen under the Home Assistant storage key `ha_controller.layout.<entry_id>` and exchanged with the panel over websocket. The reference layout `protocol/fixtures/layouts/valid/reference.json` mirrors the screenshot:
+The layout is stored per screen under the Home Assistant storage key `ha_controller.layout.<entry_id>` and exchanged with the panel over websocket. The reference layout `docs/protocol/fixtures/layouts/valid/reference.json` mirrors the screenshot:
 
 ```json
 { "version": 1, "start": "b1", "settings": { "sleep_timeout": 20 }, "blocks": [
@@ -54,7 +54,7 @@ Entities that do not exist (yet) are valid; the screen shows them as unavailable
 
 ## 7. Device protocol v1 (normative)
 
-`PROTOCOL_VERSION = 1`. `docs/protocol.md` is the living copy of this section. `protocol/fixtures/` pins it with examples, used by the tests of all three implementations.
+`PROTOCOL_VERSION = 1`. This page is the living copy of this section. `docs/protocol/fixtures/` pins it with examples, used by the tests of all three implementations.
 
 **7.1 Actions (Home Assistant → screen).** Services `esphome.<node>_<action>`:
 
@@ -138,4 +138,31 @@ Anything else is ignored: an unknown block, a custom block, an unparsable value.
 
 ## Fixtures
 
-The examples that pin this protocol live in [protocol/fixtures](../protocol/README.md). All three implementations test themselves against them.
+`fixtures/` is the executable contract of this protocol. The examples pin it, and all three implementations test themselves against them. All files are UTF-8 JSON without a BOM.
+
+| Folder | Content | Read by |
+|---|---|---|
+| `fixtures/layouts/valid`, `fixtures/layouts/invalid` | Stored layouts and the validation error each invalid one must produce | pytest in `custom_components/ha_controller/tests`, vitest in `custom_components/ha_controller/frontend/test` |
+| `fixtures/payloads/valid` | A stored layout and the compiled payload (with golden `rev`) | pytest in `custom_components/ha_controller/tests`, vitest in `custom_components/ha_controller/frontend/test`, doctest in `esphome/tests` |
+| `fixtures/payloads/invalid` | Raw strings sent to `set_layout` and the parse error expected | doctest in `esphome/tests` |
+| `fixtures/states` | Home Assistant states and the expected update objects | pytest in `custom_components/ha_controller/tests` |
+| `fixtures/controls` | Control events and the expected service call | pytest in `custom_components/ha_controller/tests` |
+| `fixtures/colors.json` | Background colours and the expected text colour | pytest in `custom_components/ha_controller/tests`, vitest in `custom_components/ha_controller/frontend/test`, doctest in `esphome/tests` |
+
+The consumers are:
+
+- pytest: `custom_components/ha_controller/tests` and `.github/scripts/tests` (the latter checks the fixtures themselves);
+- vitest: `custom_components/ha_controller/frontend/test`;
+- doctest: `esphome/tests`.
+
+### One broken rule per invalid fixture
+
+Each file in `fixtures/layouts/invalid` takes a valid layout and breaks exactly one rule. Its stem is the expected error code, or the code followed by `-` and a suffix when a code has several cases.
+
+### Canonical revision
+
+```python
+hashlib.sha256(json.dumps(p, sort_keys=True, separators=(",", ":"), ensure_ascii=False).encode()).hexdigest()[:8]
+```
+
+`p` is the payload without its `rev` key. Recompute the golden `rev` of `fixtures/payloads/valid/*.json` whenever a payload changes.

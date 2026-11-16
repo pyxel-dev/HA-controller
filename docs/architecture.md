@@ -27,13 +27,13 @@ HA Controller has three parts: a Home Assistant custom integration with a sideba
 - The integration is the single source of truth for both the layout and the version. The firmware is a generic renderer.
 
 - **Integration** (`custom_components/ha_controller/`): stores and validates layouts, compiles them into the device payload, runs the sync engine and exposes the websocket API used by the panel.
-- **Panel** (`frontend/`): the block map editor, built with Lit and Vite and served from the integration.
+- **Panel** (`custom_components/ha_controller/frontend/`): the block map editor, built with Lit and Vite and served from the integration.
 - **Firmware** (`esphome/`): a generic renderer. It parses the layout and states it receives, draws the blocks and reports touches as events.
-- **Distribution** (`scripts/`, `.github/workflows/`): HACS release zip, firmware builds and the web installer on GitHub Pages.
+- **Distribution** (`.github/scripts/`, `.github/workflows/`): HACS release zip, firmware builds and the web installer on GitHub Pages.
 
 ## Handshake: hello, layout and states
 
-When the screen connects (or reboots) it fires a `hello` event carrying its firmware version and the protocol version. The integration answers with `set_layout` (the compiled layout payload with its revision) and then `set_states` (the current Home Assistant states of the entities the layout uses). Afterwards it sends `set_states` again whenever a watched entity changes, and `set_layout` whenever the stored layout changes. The exact messages are defined in `docs/protocol.md` and pinned by `protocol/fixtures/`.
+When the screen connects (or reboots) it fires a `hello` event carrying its firmware version and the protocol version. When the revision differs, the integration answers with `set_layout` (the compiled layout payload with its revision) and then `set_states` (the current Home Assistant states of the entities the layout uses). The integration pushes the layout only when the hello's revision differs from its own, and after a `connected` hello with the same revision it pushes all states. Afterwards it sends `set_states` again whenever a watched entity changes, and `set_layout` whenever the stored layout changes. The exact messages are defined in `docs/protocol/README.md` and pinned by `docs/protocol/fixtures/`.
 
 ## Controls become service calls
 
@@ -45,17 +45,16 @@ The integration version is the single version of the repository. The integration
 
 ## Repository layout
 
+The repository root holds no files except `README.md` (GitHub and HACS landing page), `hacs.json` (HACS reads it only at the root) and `.gitignore`. Everything else lives in a folder:
+
 | Path | Content |
 |---|---|
-| `docs/` | User and developer documentation. `docs/superpowers/` holds this spec and the plans. |
-| `protocol/fixtures/` | Shared test fixtures: the cross-language contract |
-| `custom_components/ha_controller/` | Home Assistant integration (Python) |
-| `custom_components/ha_controller/emoji.json` | Canonical list of supported emoji, read by the firmware build, the panel and the integration |
-| `custom_components/ha_controller/frontend/` | Built panel bundle (generated, git-ignored) |
-| `frontend/` | Panel source (TypeScript, Lit, Vite) |
-| `esphome/` | Firmware: device config, packages, simulator config, external components, host tests, web installer page |
-| `scripts/` | Versioning, packaging, GitHub Pages site builder |
-| `tests/` | Python tests (protocol fixtures, docs, integration, scripts) |
-| `.claude/` | Claude Code skills and agents |
+| `docs/` | User and developer documentation. `docs/protocol/` holds the protocol doc (`README.md`) and its shared fixtures (`fixtures/`), the cross-language contract. `docs/superpowers/` holds this spec and the plans. |
+| `custom_components/` | Everything for the Home Assistant integration. HACS allows a single directory here, so development files live inside it, or next to it as plain files. |
+| `custom_components/ha_controller/` | The integration (Python). Also holds `emoji.json` (canonical emoji list, also read by the firmware build and the panel), `brand/`, `tests/` (pytest), and `frontend/` (panel source in TypeScript, Lit and Vite, built to `frontend/dist/`, which is git-ignored). |
+| `custom_components/pyproject.toml`, `requirements_test.txt`, `__init__.py` | Python test and lint configuration for the integration. The empty `__init__.py` keeps test imports under `custom_components.ha_controller`. |
+| `esphome/` | Everything for the firmware: device config, packages, simulator config, external components, C++ host tests, web installer page, `requirements.txt` (ESPHome version) and its venv (`esphome/.venv`, git-ignored) |
 | `.github/workflows/` | CI, firmware CI, release |
+| `.github/scripts/` | Release and repository-check tooling (versioning, packaging, GitHub Pages site builder, docs and fixture checks), with its own `pyproject.toml`, `requirements.txt` and `tests/` |
+| `.claude/` | `CLAUDE.md`, Claude Code skills and agents |
 | `3D_models/`, `files/` | Existing enclosure models (unchanged) |

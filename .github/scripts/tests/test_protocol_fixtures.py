@@ -1,11 +1,11 @@
-"""Executable protocol contract: shape and golden values of protocol/fixtures."""
+"""Executable protocol contract: shape and golden values of docs/protocol/fixtures."""
 
 import hashlib
 import json
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[2]
-FIXTURES = ROOT / "protocol" / "fixtures"
+ROOT = Path(__file__).resolve().parents[3]
+FIXTURES = ROOT / "docs" / "protocol" / "fixtures"
 EMOJI = ROOT / "custom_components" / "ha_controller" / "emoji.json"
 
 LAYOUT_CODES = {
