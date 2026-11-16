@@ -1,3 +1,5 @@
+import type {FontSize, ItemKind} from "./types";
+
 /** English UI strings for validation error codes and delete refusals. */
 const ERRORS: Record<string, string> = {
   invalid_structure: "The layout is malformed.",
@@ -28,4 +30,44 @@ export function errorMessage(code: string): string {
 export const deleteReason: Record<"start" | "disconnects", string> = {
   start: "Choose another start block first.",
   disconnects: "Other blocks would become unreachable.",
+};
+
+/** Item kind labels, in the order offered by the "add item" menu. */
+export const ITEM_KIND_LABEL: Record<ItemKind, string> = {
+  text: "Text",
+  emoji: "Emoji",
+  entity: "Entity state",
+  battery: "Battery",
+  brightness: "Screen brightness",
+};
+
+export const FONT_SIZE_LABEL: Record<FontSize, string> = {s: "S", m: "M", l: "L", xl: "XL"};
+
+export const FONT_SIZE_ORDER: FontSize[] = ["s", "m", "l", "xl"];
+
+export const UI = {
+  name: "Name",
+  background: "Background",
+  backgroundColour: (colour: string) => `Background ${colour}`,
+  customBackground: "Custom background colour",
+  fontSize: "Font size",
+  fontSizeInherit: "Inherit",
+  type: "Type",
+  typeEntity: "Entity",
+  typeCustom: "Custom",
+  entity: "Entity",
+  entityPlaceholder: "domain.entity",
+  setStart: "Set as start block",
+  deleteBlock: "Delete block",
+  addItemLabel: "Add item",
+  addItemPlaceholder: "Add item…",
+  moveUp: "Move up",
+  moveDown: "Move down",
+  removeItem: "Remove item",
+  text: "Text",
+  attributeOptional: "Attribute (optional)",
+  emoji: "Emoji",
+  unavailable: "unavailable",
+  previewBattery: "Battery",
+  previewBrightness: "Brightness",
 };

@@ -1,6 +1,7 @@
 import {LitElement, css, html} from "lit";
 import {property} from "lit/decorators.js";
 import {defineElement} from "../define";
+import {UI} from "../messages";
 import {SUPPORTED_EMOJI, normalizeEmoji} from "../model/emoji";
 
 /** Grid of the emoji the screen can render. */
@@ -32,7 +33,7 @@ export class HcEmojiPicker extends LitElement {
 
   render() {
     const current = normalizeEmoji(this.value ?? "");
-    return html`<div class="grid" role="group" aria-label="Emoji">
+    return html`<div class="grid" role="group" aria-label=${UI.emoji}>
       ${SUPPORTED_EMOJI.map(
         (e) => html`<button
           type="button"

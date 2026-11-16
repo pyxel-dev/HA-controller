@@ -1,25 +1,18 @@
 import {LitElement, css, html, nothing} from "lit";
 import {property} from "lit/decorators.js";
+import {repeat} from "lit/directives/repeat.js";
 import {defineElement} from "../define";
 import "./hc-entity-input";
 import "./hc-item-editor";
 import "./hc-preview";
-import {deleteReason} from "../messages";
+import {FONT_SIZE_LABEL, FONT_SIZE_ORDER, ITEM_KIND_LABEL, UI, deleteReason} from "../messages";
 import {canDelete} from "../model/grid";
 import {
   PALETTE, addItem, deleteBlock, moveItem, removeItem, setStart, updateBlock, updateItem,
 } from "../model/edit";
 import {MAX_ITEMS} from "../model/limits";
-import type {Block, FontSize, Hass, Item, ItemKind, Layout} from "../types";
+import type {Block, Hass, Item, ItemKind, Layout} from "../types";
 
-const FONT_SIZES: [FontSize, string][] = [["s", "S"], ["m", "M"], ["l", "L"], ["xl", "XL"]];
-const ITEM_KINDS: [ItemKind, string][] = [
-  ["text", "Text"],
-  ["emoji", "Emoji"],
-  ["entity", "Entity state"],
-  ["battery", "Battery"],
-  ["brightness", "Screen brightness"],
-];
 
 /** Editor for the selected block. Emits `hc-layout-change` with the complete new layout. */
 export class HcBlockEditor extends LitElement {
@@ -113,18 +106,18 @@ export class HcBlockEditor extends LitElement {
     const isStart = this.layout.start === block.id;
     return html`<div class="form">
       <div>
-        <label for="name">Name</label>
+        <label for="name">${UI.name}</label>
         <input id="name" type="text" name="name" maxlength="32" .value=${block.name} @input=${this.onName} />
       </div>
       <div>
-        <span class="label" id="bg-label">Background</span>
+        <span class="label" id="bg-label">${UI.background}</span>
         <div class="row" role="group" aria-labelledby="bg-label">
           ${PALETTE.map(
             (colour) => html`<button
               type="button"
               class="swatch"
               style="background: ${colour}"
-              aria-label=${`Background ${colour}`}
+              aria-label=${UI.backgroundColour(colour)}
               aria-pressed=${block.background.toLowerCase() === colour.toLowerCase() ? "true" : "false"}
               @click=${() => this.change(updateBlock(this.layout, block.id, {background: colour}))}
             ></button>`,
@@ -132,7 +125,7 @@ export class HcBlockEditor extends LitElement {
           <input
             type="color"
             name="background"
-            aria-label="Custom background colour"
+            aria-label=${UI.customBackground}
             .value=${block.background.toLowerCase()}
             @change=${(e: Event) =>
               this.change(updateBlock(this.layout, block.id, {background: (e.target as HTMLInputElement).value.toUpperCase()}))}
@@ -140,36 +133,36 @@ export class HcBlockEditor extends LitElement {
         </div>
       </div>
       <div>
-        <span class="label" id="fs-label">Font size</span>
+        <span class="label" id="fs-label">${UI.fontSize}</span>
         <div class="row" role="group" aria-labelledby="fs-label">
-          ${FONT_SIZES.map(
-            ([size, label]) => html`<button
+          ${FONT_SIZE_ORDER.map(
+            (size) => html`<button
               type="button"
               class="font-size"
               aria-pressed=${block.font_size === size ? "true" : "false"}
               @click=${() => this.change(updateBlock(this.layout, block.id, {font_size: size}))}
-            >${label}</button>`,
+            >${FONT_SIZE_LABEL[size]}</button>`,
           )}
         </div>
       </div>
       <div>
-        <label for="type">Type</label>
+        <label for="type">${UI.type}</label>
         <select id="type" name="type" @change=${this.onType}>
-          <option value="entity">Entity</option>
-          <option value="custom">Custom</option>
+          <option value="entity">${UI.typeEntity}</option>
+          <option value="custom">${UI.typeCustom}</option>
         </select>
       </div>
       ${block.type === "entity" ? this.entityFields(block) : this.customFields(block)}
       <div class="row">
         <button type="button" class="start" ?disabled=${isStart} @click=${() => this.change(setStart(this.layout, block.id))}>
-          Set as start block
+          ${UI.setStart}
         </button>
         <button
           type="button"
           class="delete"
           ?disabled=${!check.ok}
           @click=${() => this.change(deleteBlock(this.layout, block.id))}
-        >Delete block</button>
+        >${UI.deleteBlock}</button>
       </div>
       ${check.ok ? nothing : html`<div class="reason">${deleteReason[check.reason]}</div>`}
       <hc-preview .block=${block} .hass=${this.hass}></hc-preview>
@@ -183,7 +176,7 @@ export class HcBlockEditor extends LitElement {
 
   private entityFields(block: Block) {
     return html`<div>
-      <span class="label">Entity</span>
+      <span class="label">${UI.entity}</span>
       <hc-entity-input
         .hass=${this.hass}
         .value=${block.entity_id ?? ""}
@@ -199,7 +192,9 @@ export class HcBlockEditor extends LitElement {
   private customFields(block: Block) {
     const items = block.items ?? [];
     return html`<div class="items">
-      ${items.map(
+      ${repeat(
+        items,
+        (item) => item.id,
         (item, index) => html`<hc-item-editor
           .hass=${this.hass}
           .item=${item}
@@ -220,10 +215,10 @@ export class HcBlockEditor extends LitElement {
         ></hc-item-editor>`,
       )}
       <div>
-        <label for="add-item">Add item</label>
+        <label for="add-item">${UI.addItemLabel}</label>
         <select id="add-item" name="add-item" ?disabled=${items.length >= MAX_ITEMS} @change=${this.onAddItem}>
-          <option value="">Add item…</option>
-          ${ITEM_KINDS.map(([kind, label]) => html`<option value=${kind}>${label}</option>`)}
+          <option value="">${UI.addItemPlaceholder}</option>
+          ${(Object.keys(ITEM_KIND_LABEL) as ItemKind[]).map((kind) => html`<option value=${kind}>${ITEM_KIND_LABEL[kind]}</option>`)}
         </select>
       </div>
     </div>`;

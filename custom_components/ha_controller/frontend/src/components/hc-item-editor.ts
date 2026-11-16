@@ -3,15 +3,8 @@ import {property} from "lit/decorators.js";
 import {defineElement} from "../define";
 import "./hc-entity-input";
 import "./hc-emoji-picker";
+import {FONT_SIZE_LABEL, FONT_SIZE_ORDER, ITEM_KIND_LABEL, UI} from "../messages";
 import type {FontSize, Hass, Item} from "../types";
-
-const KIND_LABEL: Record<Item["kind"], string> = {
-  text: "Text",
-  emoji: "Emoji",
-  entity: "Entity state",
-  battery: "Battery",
-  brightness: "Screen brightness",
-};
 
 /** Editor for one item of a custom block. */
 export class HcItemEditor extends LitElement {
@@ -65,18 +58,17 @@ export class HcItemEditor extends LitElement {
     const item = this.item;
     return html`<div class="item">
       <div class="head">
-        <strong>${KIND_LABEL[item.kind]}</strong>
-        <button type="button" class="up" aria-label="Move up" ?disabled=${this.index <= 0} @click=${() => this.move(-1)}>↑</button>
-        <button type="button" class="down" aria-label="Move down" ?disabled=${this.index >= this.count - 1} @click=${() => this.move(1)}>↓</button>
-        <button type="button" class="remove" aria-label="Remove item" @click=${() => this.emit("hc-item-remove")}>✕</button>
+        <strong>${ITEM_KIND_LABEL[item.kind]}</strong>
+        <button type="button" class="up" aria-label=${UI.moveUp} ?disabled=${this.index <= 0} @click=${() => this.move(-1)}>↑</button>
+        <button type="button" class="down" aria-label=${UI.moveDown} ?disabled=${this.index >= this.count - 1} @click=${() => this.move(1)}>↓</button>
+        <button type="button" class="remove" aria-label=${UI.removeItem} @click=${() => this.emit("hc-item-remove")}>✕</button>
       </div>
       ${this.fields(item)}
       <div class="actions">
-        <label for="font-size">Font size</label>
+        <label for="font-size">${UI.fontSize}</label>
         <select id="font-size" name="font-size" @change=${this.onFontSize}>
-          ${[["", "Inherit"], ["s", "S"], ["m", "M"], ["l", "L"], ["xl", "XL"]].map(
-            ([value, label]) => html`<option value=${value}>${label}</option>`,
-          )}
+          <option value="">${UI.fontSizeInherit}</option>
+          ${FONT_SIZE_ORDER.map((size) => html`<option value=${size}>${FONT_SIZE_LABEL[size]}</option>`)}
         </select>
       </div>
     </div>`;
@@ -93,7 +85,7 @@ export class HcItemEditor extends LitElement {
         return html`<input
           type="text"
           name="text"
-          aria-label="Text"
+          aria-label=${UI.text}
           maxlength="64"
           .value=${item.text ?? ""}
           @input=${(e: Event) => this.patch({text: (e.target as HTMLInputElement).value})}
@@ -118,8 +110,8 @@ export class HcItemEditor extends LitElement {
           <input
             type="text"
             name="attribute"
-            aria-label="Attribute (optional)"
-            placeholder="Attribute (optional)"
+            aria-label=${UI.attributeOptional}
+            placeholder=${UI.attributeOptional}
             .value=${item.attribute ?? ""}
             @input=${(e: Event) => this.patch({attribute: (e.target as HTMLInputElement).value || null})}
           />`;

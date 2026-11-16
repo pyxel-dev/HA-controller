@@ -2,6 +2,7 @@ import {LitElement, css, html} from "lit";
 import {property} from "lit/decorators.js";
 import {defineElement} from "../define";
 import {textColorFor} from "../model/color";
+import {UI} from "../messages";
 import type {Block, Hass, Item} from "../types";
 
 const SIZES: Record<string, string> = {s: "11px", m: "14px", l: "18px", xl: "24px"};
@@ -38,7 +39,7 @@ export class HcPreview extends LitElement {
 
   private stateOf(entityId: string | undefined, attribute?: string | null): string {
     const entity = entityId ? this.hass?.states[entityId] : undefined;
-    if (!entity) return "unavailable";
+    if (!entity) return UI.unavailable;
     if (attribute) return String(entity.attributes[attribute] ?? "");
     const unit = entity.attributes.unit_of_measurement;
     return typeof unit === "string" ? `${entity.state} ${unit}` : entity.state;
@@ -50,8 +51,8 @@ export class HcPreview extends LitElement {
       case "text": text = item.text ?? ""; break;
       case "emoji": text = item.emoji ?? ""; break;
       case "entity": text = this.stateOf(item.entity_id, item.attribute); break;
-      case "battery": text = "Battery"; break;
-      case "brightness": text = "Brightness"; break;
+      case "battery": text = UI.previewBattery; break;
+      case "brightness": text = UI.previewBrightness; break;
     }
     return html`<div class="line" style="font-size: ${SIZES[item.font_size ?? block.font_size]}">${text}</div>`;
   }

@@ -1,6 +1,7 @@
 import {LitElement, css, html} from "lit";
 import {property} from "lit/decorators.js";
 import {defineElement} from "../define";
+import {UI} from "../messages";
 import type {Hass} from "../types";
 
 let counter = 0;
@@ -36,8 +37,8 @@ export class HcEntityInput extends LitElement {
     return html`<input
         type="text"
         list=${this.listId}
-        aria-label="Entity"
-        placeholder="domain.entity"
+        aria-label=${UI.entity}
+        placeholder=${UI.entityPlaceholder}
         .value=${this.value ?? ""}
         @change=${(e: Event) => this.emit((e.target as HTMLInputElement).value.trim())}
       />
