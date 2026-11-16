@@ -31,21 +31,22 @@
 ### Task 1: Repository conventions, docs skeleton and CI
 
 **Files:**
-- Create: `CLAUDE.md`, `docs/README.md`, `docs/architecture.md`, `pyproject.toml`, `requirements_test.txt`, `tests/__init__.py`, `tests/docs/__init__.py`, `tests/docs/test_links.py`, `.github/workflows/ci.yml`
+- Create: `.claude/CLAUDE.md`, `docs/README.md`, `docs/architecture.md`, `.github/scripts/pyproject.toml`, `.github/scripts/requirements.txt`, `.github/scripts/tests/__init__.py`, `.github/scripts/tests/test_docs_links.py`, `.github/workflows/ci.yml`
 - Modify: `README.md` (rewrite in English), `.gitignore`
 
 **Interfaces:**
 - Produces:
-  - `pyproject.toml` with `[tool.pytest.ini_options] testpaths = ["tests"]`, `asyncio_mode = "auto"`, and `[tool.ruff] target-version = "py314"`, `line-length = 100`, lint rules `E,F,I,UP,B`.
-  - `requirements_test.txt` (`pytest`, `ruff`). Plan 2 replaces `pytest` with the Home Assistant test harness.
-  - `.github/workflows/ci.yml` with a single job `python`. Later plans add jobs.
+  - `.github/scripts/pyproject.toml` with `[tool.pytest.ini_options] testpaths = ["tests"]` and `[tool.ruff] target-version = "py314"`, `line-length = 100`, lint rules `E,F,I,UP,B`.
+  - `.github/scripts/requirements.txt` (`pytest`, `ruff`) for the repository checks. Plan 2 gives the integration its own test requirements under `custom_components/`.
+  - `.github/workflows/ci.yml` with a single job `repo-checks`. Later plans add jobs.
+  - The repository root keeps no files except `README.md`, `hacs.json` (plan 2) and `.gitignore`.
   - `docs/README.md` as the docs index. Later plans add links.
-  - `CLAUDE.md` with a `## Commands` table and a `## Skills and agents` section. Later plans append rows.
+  - `.claude/CLAUDE.md` with a `## Commands` table and a `## Skills and agents` section. Later plans append rows.
 
-- [ ] **Step 1: Write the failing tests** in `tests/docs/test_links.py`.
+- [ ] **Step 1: Write the failing tests** in `.github/scripts/tests/test_docs_links.py`.
 
 ```python
-DOC_ROOTS = ["README.md", "CLAUDE.md", "docs"]  # docs/superpowers/** is excluded
+DOC_ROOTS = ["README.md", ".claude/CLAUDE.md", "docs"]  # docs/superpowers/** is excluded
 
 def test_relative_links_resolve():
     # For every markdown link [text](target) whose target does not start with
@@ -60,7 +61,7 @@ def test_docs_index_lists_every_doc():
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/docs -v`
+Run: `pytest .github/scripts/tests -v`
 Expected: FAIL (`docs/README.md` is missing).
 
 - [ ] **Step 3: Write the docs and config**
@@ -80,33 +81,33 @@ Expected: FAIL (`docs/README.md` is missing).
     - the hello → layout/states handshake;
     - controls → service calls;
     - firmware updates.
-  - **`CLAUDE.md`:**
+  - **`.claude/CLAUDE.md`:**
     - Title "HA Controller — guidance for Claude Code" and a two-line purpose.
     - `## Rules`:
       - English only.
-      - One version for the whole repo; change it only with `python scripts/versioning.py bump X.Y.Z` (added in plan 5).
-      - The protocol is defined in `docs/protocol.md` and pinned by `protocol/fixtures/`.
+      - One version for the whole repo; change it only with `python .github/scripts/versioning.py bump X.Y.Z` (added in plan 5).
+      - The protocol is defined in `docs/protocol/README.md` and pinned by `docs/protocol/fixtures/`.
       - TDD.
       - Never commit `esphome/secrets.yaml`.
       - Specs and plans live in `docs/superpowers/`.
     - `## Repository map`: the spec §3 table.
-    - `## Commands`: `pytest`, `ruff check .`.
+    - `## Commands`: `pytest .github/scripts/tests`, `ruff check .github/scripts`.
     - `## Skills and agents`: empty list.
-  - **`.gitignore`:** keep `.DS_Store`. Add `__pycache__/`, `.pytest_cache/`, `.ruff_cache/`, `.venv*/`, `node_modules/`, `frontend/coverage/`, `custom_components/ha_controller/frontend/*.js`, `esphome/.esphome/`, `esphome/secrets.yaml`, `build/`, `dist/`, `site/`.
+  - **`.gitignore`:** keep `.DS_Store`. Add `__pycache__/`, `.pytest_cache/`, `.ruff_cache/`, `.venv*/`, `node_modules/`, `custom_components/ha_controller/frontend/coverage/`, `.superpowers/`, `esphome/.esphome/`, `esphome/secrets.yaml`, `build/`, `dist/`, `site/`.
 
 - [ ] **Step 4: Run the tests and lint**
 
-Run: `pytest tests/docs -v && ruff check .`
+Run: `pytest .github/scripts/tests -v && ruff check .github/scripts`
 Expected: PASS, no lint findings.
 
 - [ ] **Step 5: Add CI.** In `.github/workflows/ci.yml`, workflow `CI`:
   - Triggers: `push` to `main` and `pull_request`.
-  - Job `python` on `ubuntu-latest`: `actions/checkout@v4`, `actions/setup-python@v5` with `python-version: "3.14"`, `pip install -r requirements_test.txt`, `ruff check .`, `pytest`.
+  - Job `repo-checks` on `ubuntu-latest`: `actions/checkout@v4`, `actions/setup-python@v5` with `python-version: "3.14"`, `pip install -r .github/scripts/requirements.txt`, `ruff check .github/scripts`, `pytest .github/scripts/tests`.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add README.md CLAUDE.md docs/README.md docs/architecture.md pyproject.toml requirements_test.txt tests .gitignore .github/workflows/ci.yml
+git add README.md .claude/CLAUDE.md docs/README.md docs/architecture.md .github/scripts .gitignore .github/workflows/ci.yml
 git commit -m "chore: add repository conventions, docs skeleton and CI"
 ```
 
@@ -116,21 +117,21 @@ git commit -m "chore: add repository conventions, docs skeleton and CI"
 
 **Files:**
 - Create:
-  - `docs/protocol.md`, `protocol/README.md`, `custom_components/ha_controller/emoji.json`
-  - `protocol/fixtures/**` (see the tables below)
-  - `tests/protocol/__init__.py`, `tests/protocol/test_fixtures.py`
+  - `docs/protocol/README.md`, `docs/protocol/README.md`, `custom_components/ha_controller/emoji.json`
+  - `docs/protocol/fixtures/**` (see the tables below)
+  - `.github/scripts/tests/__init__.py`, `.github/scripts/tests/test_protocol_fixtures.py`
   - `.claude/skills/protocol-change/SKILL.md`, `.claude/agents/protocol-guardian.md`
-- Modify: `docs/README.md` (link `protocol.md`), `CLAUDE.md` (skills and agents list)
+- Modify: `docs/README.md` (link `protocol.md`), `.claude/CLAUDE.md` (skills and agents list)
 
 **Interfaces:**
 - Produces (consumed by plans 2, 3 and 4). All fixture files are UTF-8 JSON without a BOM.
   - `custom_components/ha_controller/emoji.json`: a JSON array of the 64 strings below, in this order:
     `💡 🔥 ❄ 🌡 💧 🌬 ☀ 🌙 ⭐ ☁ ⛅ 🌧 ⚡ 🔋 🔌 🏠 🛋 🛏 🛁 🚿 🍳 🍽 ☕ 🍷 🧺 🪴 🚪 🪟 🔒 🔓 🔑 🔔 🔕 🔊 🔇 🎵 📺 🎮 💻 📱 ⏰ 📅 🚗 🚲 🐶 🐱 👶 👋 👍 ❤ 😀 😴 🎉 🎄 ✅ ❌ ⚠ ℹ ▶ ⏸ ♻ 🌀 🧊 🏡`
-  - `protocol/fixtures/layouts/valid/<name>.json`: a stored layout.
-  - `protocol/fixtures/layouts/invalid/<name>.json`: `{"expect": {"code": str, "ref": str | null}, "layout": {...}}`. The stem equals `code` or starts with `code-`.
-  - `protocol/fixtures/payloads/valid/<name>.json`: `{"layout": "<stem in layouts/valid>", "payload": {...}}`.
-  - `protocol/fixtures/payloads/invalid/<name>.json`: `{"expect": "bad_json" | "unsupported_version" | "invalid_payload", "text": "<raw string sent to set_layout>"}`.
-  - `protocol/fixtures/states/<name>.json`:
+  - `docs/protocol/fixtures/layouts/valid/<name>.json`: a stored layout.
+  - `docs/protocol/fixtures/layouts/invalid/<name>.json`: `{"expect": {"code": str, "ref": str | null}, "layout": {...}}`. The stem equals `code` or starts with `code-`.
+  - `docs/protocol/fixtures/payloads/valid/<name>.json`: `{"layout": "<stem in layouts/valid>", "payload": {...}}`.
+  - `docs/protocol/fixtures/payloads/invalid/<name>.json`: `{"expect": "bad_json" | "unsupported_version" | "invalid_payload", "text": "<raw string sent to set_layout>"}`.
+  - `docs/protocol/fixtures/states/<name>.json`:
 
     ```json
     {
@@ -144,10 +145,10 @@ git commit -m "chore: add repository conventions, docs skeleton and CI"
     ```
 
     `registry_options` is optional; `updates` lists the expected update objects.
-  - `protocol/fixtures/controls/<name>.json`: `{"layout": "reference", "hass_states": {...}, "event": {"block", "item", "op", "value"}, "expect_call": {"domain", "service", "data"} | null}`.
-  - `protocol/fixtures/colors.json`: `[{"bg": "#RRGGBB", "text": "#000000" | "#FFFFFF"}]`.
+  - `docs/protocol/fixtures/controls/<name>.json`: `{"layout": "reference", "hass_states": {...}, "event": {"block", "item", "op", "value"}, "expect_call": {"domain", "service", "data"} | null}`.
+  - `docs/protocol/fixtures/colors.json`: `[{"bg": "#RRGGBB", "text": "#000000" | "#FFFFFF"}]`.
 
-- [ ] **Step 1: Write the failing tests** in `tests/protocol/test_fixtures.py`. Local helpers: `canonical_rev(payload) -> str` and `luminance(hex) -> float` (spec §5.5/§7.3).
+- [ ] **Step 1: Write the failing tests** in `.github/scripts/tests/test_protocol_fixtures.py`. Local helpers: `canonical_rev(payload) -> str` and `luminance(hex) -> float` (spec §5.5/§7.3).
 
 ```python
 def test_emoji_list_is_well_formed():
@@ -157,7 +158,7 @@ def test_emoji_list_is_well_formed():
     assert "️" not in "".join(emoji)
     assert {"💡", "🔋", "⚡", "☀", "👋"} <= set(emoji) and "🦄" not in emoji
 
-def test_all_fixtures_are_utf8_json(): ...        # every protocol/fixtures/**/*.json: no BOM, json.loads ok
+def test_all_fixtures_are_utf8_json(): ...        # every docs/protocol/fixtures/**/*.json: no BOM, json.loads ok
 
 def test_invalid_layout_fixtures_declare_known_codes():
     # expect.code in the 18 codes of spec §6 except payload_too_large
@@ -177,7 +178,7 @@ def test_color_fixture_matches_luminance_rule():
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/protocol -v`
+Run: `pytest .github/scripts/tests -v`
 Expected: FAIL (the files are missing).
 
 - [ ] **Step 3: Write `emoji.json` and the fixtures.**
@@ -291,13 +292,13 @@ Expected: FAIL (the files are missing).
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/protocol -v`
+Run: `pytest .github/scripts/tests -v`
 Expected: PASS.
 
 - [ ] **Step 5: Write the protocol doc and guidance**
-  - **`docs/protocol.md`:** spec §6 and §7, verbatim, under the heading "Device protocol v1". Add a closing "Fixtures" section with the relative link `../protocol/README.md`.
-  - **`protocol/README.md`:**
-    - Who reads each fixture folder: pytest in `tests/integration`, vitest in `frontend/test`, doctest in `esphome/tests`.
+  - **`docs/protocol/README.md`:** spec §6 and §7, verbatim, under the heading "Device protocol v1". Add a closing "Fixtures" section with the relative link `../protocol/README.md`.
+  - **`docs/protocol/README.md`:**
+    - Who reads each fixture folder: pytest in `custom_components/ha_controller/tests`, vitest in `custom_components/ha_controller/frontend/test`, doctest in `esphome/tests`.
     - The rule "one broken rule per invalid fixture".
     - The canonical-revision snippet:
 
@@ -309,28 +310,28 @@ Expected: PASS.
     - `description:` "Use when changing anything that crosses the Home Assistant ↔ screen boundary: layout fields, validation rules, payload keys, state update fields, events, actions, emoji list or limits."
     - Body, a numbered checklist:
       1. Classify the change. The C++ parser rejects unknown `widget`/`kind`/`font` values, so any new value is breaking: bump `PROTOCOL_VERSION` in `custom_components/ha_controller/const.py` and in the firmware's `ha_controller.h`.
-      2. Edit `docs/protocol.md` first.
-      3. Update `protocol/fixtures/`, keeping one rule per invalid fixture and regenerating golden `rev` values with the snippet.
-      4. Update the Python code (`layout.py`, `compiler.py`, `states.py`, `controls.py`), the TypeScript model (`frontend/src/model/`), the C++ parsers (`esphome/components/ha_controller/layout.*`, `states.*`) and the renderers (`widgets.*`, panel editor).
-      5. Run `pytest`, `npm --prefix frontend test`, the host C++ tests and `esphome compile`.
+      2. Edit `docs/protocol/README.md` first.
+      3. Update `docs/protocol/fixtures/`, keeping one rule per invalid fixture and regenerating golden `rev` values with the snippet.
+      4. Update the Python code (`layout.py`, `compiler.py`, `states.py`, `controls.py`), the TypeScript model (`custom_components/ha_controller/frontend/src/model/`), the C++ parsers (`esphome/components/ha_controller/layout.*`, `states.*`) and the renderers (`widgets.*`, panel editor).
+      5. Run `pytest custom_components/ha_controller/tests`, `pytest .github/scripts/tests`, `npm --prefix custom_components/ha_controller/frontend test`, the host C++ tests and `esphome compile`.
       6. Ask the `protocol-guardian` agent to review.
   - **`.claude/agents/protocol-guardian.md`:**
     - Frontmatter `name: protocol-guardian`, `tools: Read, Grep, Glob, Bash`.
-    - `description:` "Reviews a diff for consistency of the HA ↔ screen protocol across docs/protocol.md, protocol/fixtures, the integration (Python), the panel model (TypeScript) and the firmware parsers (C++). Use after any protocol-related change and before merging."
+    - `description:` "Reviews a diff for consistency of the HA ↔ screen protocol across docs/protocol/README.md, docs/protocol/fixtures, the integration (Python), the panel model (TypeScript) and the firmware parsers (C++). Use after any protocol-related change and before merging."
     - Body:
       - A checklist: field names, error codes, limits and constants identical in all places; fixtures updated; golden revs recomputed; `PROTOCOL_VERSION` bumped on breaking changes; docs updated.
       - Output: a list of `file:line — inconsistency — fix`, or "Protocol consistent".
   - **`docs/README.md`:** add a `protocol.md` bullet.
-  - **`CLAUDE.md`:** list the skill and the agent under `## Skills and agents`.
+  - **`.claude/CLAUDE.md`:** list the skill and the agent under `## Skills and agents`.
 
 - [ ] **Step 6: Run the whole suite**
 
-Run: `pytest -v && ruff check .`
+Run: `pytest .github/scripts/tests -v && ruff check .github/scripts`
 Expected: PASS.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add docs/protocol.md docs/README.md protocol custom_components/ha_controller/emoji.json tests/protocol .claude CLAUDE.md
+git add docs/protocol docs/README.md custom_components/ha_controller/emoji.json .github/scripts/tests .claude .claude/CLAUDE.md
 git commit -m "feat(protocol): add protocol v1 contract, shared fixtures and guidance"
 ```

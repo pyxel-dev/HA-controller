@@ -9,7 +9,7 @@
 - a tag-driven release workflow that publishes the HACS zip, the firmware binaries and the Pages site.
 
 **Architecture:**
-- **Versioning:** `scripts/versioning.py` owns the version rule.
+- **Versioning:** `.github/scripts/versioning.py` owns the version rule.
 - **Updates:** the integration's `update` platform asks the screen, through plan 4's `install_firmware` action, to download its OTA image for the integration version from GitHub Pages.
 - **Release scripts:** three small, unit-tested scripts collect the firmware, package the integration and assemble the Pages site from GitHub release assets.
 - **Workflow:** `release.yml` chains them on a `vX.Y.Z` tag. A manual run is a dry run.
@@ -20,7 +20,7 @@
 
 ## Global Constraints
 
-- **Version:** one SemVer `X.Y.Z` in `custom_components/ha_controller/manifest.json`, `esphome/version.yaml`, `frontend/package.json` and `frontend/package-lock.json` (root `version` and `packages[""].version`). Change it only with `scripts/versioning.py bump`.
+- **Version:** one SemVer `X.Y.Z` in `custom_components/ha_controller/manifest.json`, `esphome/version.yaml`, `custom_components/ha_controller/frontend/package.json` and `custom_components/ha_controller/frontend/package-lock.json` (root `version` and `packages[""].version`). Change it only with `.github/scripts/versioning.py bump`.
 - **URLs:** firmware OTA `https://pyxel-dev.github.io/HA-controller/firmware/<version>/ha-controller.ota.bin` (+ `.md5`); release notes `https://github.com/pyxel-dev/HA-controller/releases/tag/v<version>`.
 - **Release assets:** `ha_controller.zip`, `ha-controller-<v>.factory.bin`, `ha-controller-<v>.ota.bin`, `ha-controller-<v>.ota.bin.md5`. The `.md5` file holds exactly 32 lowercase hex characters and no newline.
 - **Timings:** install timeout 300 s; auto-update at most once per screen and version every 3600 s; auto-update only when the integration version matches `^\d+\.\d+\.\d+$`.
@@ -39,8 +39,8 @@
 ### Task 1: Version check and bump
 
 **Files:**
-- Create: `scripts/versioning.py`, `tests/scripts/__init__.py`, `tests/scripts/test_versioning.py`
-- Modify: `.github/workflows/ci.yml` (job `versions`), `CLAUDE.md`
+- Create: `.github/scripts/versioning.py`, `.github/scripts/tests/__init__.py`, `.github/scripts/tests/test_versioning.py`
+- Modify: `.github/workflows/ci.yml` (job `versions`), `.claude/CLAUDE.md`
 
 **Interfaces:**
 - Produces:
@@ -68,22 +68,22 @@ def test_main_exit_codes(repo): ...
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/scripts/test_versioning.py -v`
+Run: `pytest .github/scripts/tests/test_versioning.py -v`
 Expected: FAIL.
 
-- [ ] **Step 3: Implement `scripts/versioning.py`.**
+- [ ] **Step 3: Implement `.github/scripts/versioning.py`.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/scripts -v && python scripts/versioning.py check`
+Run: `pytest .github/scripts/tests -v && python .github/scripts/versioning.py check`
 Expected: PASS, exit 0.
 
-- [ ] **Step 5: Add CI and the docs.** Add job `versions` to `ci.yml` (setup-python 3.14, `python scripts/versioning.py check`). Add the commands to `CLAUDE.md`, and replace its plan-5 placeholder rule with the real command.
+- [ ] **Step 5: Add CI and the docs.** Add job `versions` to `ci.yml` (setup-python 3.14, `python .github/scripts/versioning.py check`). Add the commands to `.claude/CLAUDE.md`, and replace its plan-5 placeholder rule with the real command.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add scripts/versioning.py tests/scripts .github/workflows/ci.yml CLAUDE.md
+git add .github/scripts/versioning.py .github/scripts/tests .github/workflows/ci.yml .claude/CLAUDE.md
 git commit -m "build: add single-version check and bump script"
 ```
 
@@ -92,7 +92,7 @@ git commit -m "build: add single-version check and bump script"
 ### Task 2: Firmware update entity, auto-update and options flow
 
 **Files:**
-- Create: `custom_components/ha_controller/firmware.py`, `custom_components/ha_controller/update.py`, `tests/integration/test_update.py`
+- Create: `custom_components/ha_controller/firmware.py`, `custom_components/ha_controller/update.py`, `custom_components/ha_controller/tests/test_update.py`
 - Modify:
   - `custom_components/ha_controller/controller.py`, `__init__.py` (`PLATFORMS = [Platform.UPDATE]`), `config_flow.py` (options flow)
   - `strings.json`, `translations/en.json`
@@ -145,20 +145,20 @@ async def test_options_flow_toggles_auto_update(hass): ...
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/integration/test_update.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_update.py -v`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `firmware.py`, the controller additions, `update.py` and the options flow.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest -v && ruff check .`
+Run: `pytest custom_components/ha_controller/tests -v && ruff check custom_components`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add custom_components/ha_controller tests/integration/test_update.py
+git add custom_components/ha_controller custom_components/ha_controller/tests/test_update.py
 git commit -m "feat(integration): keep screen firmware on the integration version"
 ```
 
@@ -168,15 +168,15 @@ git commit -m "feat(integration): keep screen firmware on the integration versio
 
 **Files:**
 - Create:
-  - `scripts/collect_firmware.py`, `scripts/package_integration.py`, `scripts/build_pages.py`
+  - `.github/scripts/collect_firmware.py`, `.github/scripts/package_integration.py`, `.github/scripts/build_pages.py`
   - `esphome/web/index.html`
-  - `tests/scripts/test_release_scripts.py`
+  - `.github/scripts/tests/test_release_scripts.py`
 
 **Interfaces:**
-- Consumes: the plan 3 bundle `custom_components/ha_controller/frontend/ha-controller-panel.js`; the ESPHome build tree (`esphome/.esphome/build/**/firmware.factory.bin`, `firmware.ota.bin`).
+- Consumes: the plan 3 bundle `custom_components/ha_controller/frontend/dist/ha-controller-panel.js`; the ESPHome build tree (`esphome/.esphome/build/**/firmware.factory.bin`, `firmware.ota.bin`).
 - Produces (each has an `argparse` CLI with the same parameters):
   - **`collect(build_dir: Path, version: str, out_dir: Path) -> list[Path]`.** Requires exactly one `*.factory.bin` and one `*.ota.bin` under `build_dir`, otherwise it raises `ValueError`. It writes `ha-controller-<v>.factory.bin`, `ha-controller-<v>.ota.bin` and `ha-controller-<v>.ota.bin.md5`.
-  - **`package(root: Path, out_file: Path) -> Path`.** Zips the contents of `custom_components/ha_controller/` at the zip root, excluding `__pycache__/`, `*.pyc` and `.gitkeep`. Raises `FileNotFoundError("Build the panel first: npm --prefix frontend run build")` when the bundle is missing.
+  - **`package(root: Path, out_file: Path) -> Path`.** Zips the contents of `custom_components/ha_controller/` at the zip root, excluding `tests/`, `__pycache__/`, `*.pyc`, and everything under `frontend/` except `frontend/dist/ha-controller-panel.js`. Raises `FileNotFoundError("Build the panel first: npm --prefix custom_components/ha_controller/frontend run build")` when the bundle is missing.
   - **`build_site(web_dir: Path, releases_dir: Path, latest: str, out_dir: Path) -> None`.** `releases_dir/<v>/` holds each release's assets. It writes:
     - `index.html`, with every `{{VERSION}}` replaced by `latest`;
     - `.nojekyll`;
@@ -209,7 +209,7 @@ git commit -m "feat(integration): keep screen firmware on the integration versio
 ```python
 def test_collect_writes_versioned_files_and_md5(tmp_path): ...          # .md5 == hashlib.md5(ota).hexdigest(), 32 chars, no newline
 def test_collect_requires_exactly_one_of_each(tmp_path): ...            # none → ValueError; two factory bins → ValueError
-def test_package_zips_integration_with_panel(tmp_path): ...             # names include "manifest.json", "frontend/ha-controller-panel.js"; no __pycache__
+def test_package_zips_integration_with_panel(tmp_path): ...             # names include "manifest.json", "frontend/dist/ha-controller-panel.js"; no __pycache__, tests/, frontend/src or frontend/package.json
 def test_package_requires_built_panel(tmp_path): ...
 def test_build_site_manifest(tmp_path): ...                             # exact dict above for latest 0.2.0
 def test_build_site_keeps_every_release(tmp_path): ...                  # releases 0.1.0 + 0.2.0 → both firmware/<v>/ha-controller.ota.bin(.md5)
@@ -220,25 +220,25 @@ def test_web_page_template(): ...                                       # real e
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/scripts/test_release_scripts.py -v`
+Run: `pytest .github/scripts/tests/test_release_scripts.py -v`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement the three scripts and `index.html`.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/scripts -v`
+Run: `pytest .github/scripts/tests -v`
 Expected: PASS.
 
 - [ ] **Step 5: Preview locally.**
-  1. Build a fake site from the scripts' test data: `python scripts/build_pages.py --web esphome/web --releases <tmp> --latest 0.1.0 --out site`.
+  1. Build a fake site from the scripts' test data: `python .github/scripts/build_pages.py --web esphome/web --releases <tmp> --latest 0.1.0 --out site`.
   2. Serve it with `python3 -m http.server -d site`.
   3. Open it in Chrome and confirm the page shows "Firmware 0.1.0" and an Install button.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add scripts esphome/web tests/scripts
+git add .github/scripts esphome/web
 git commit -m "build: add release packaging scripts and web installer page"
 ```
 
@@ -251,7 +251,7 @@ git commit -m "build: add release packaging scripts and web installer page"
   - `.github/workflows/release.yml`
   - `docs/getting-started.md`, `docs/updates.md`, `docs/releasing.md`
   - `.claude/skills/release/SKILL.md`
-- Modify: `hacs.json`, `README.md`, `docs/README.md`, `CLAUDE.md`
+- Modify: `hacs.json`, `README.md`, `docs/README.md`, `.claude/CLAUDE.md`
 
 **Interfaces:**
 - Consumes: Tasks 1–3, `esphome/requirements.txt` and the `npm` scripts.
@@ -261,24 +261,24 @@ git commit -m "build: add release packaging scripts and web installer page"
     - **Job `build`** (`ubuntu-latest`). Steps, in order:
       1. Checkout, then setup-python 3.13 and setup-node 24 with the npm cache.
       2. Read the version from `manifest.json` into an output.
-      3. `python scripts/versioning.py check`, plus `--tag "$GITHUB_REF_NAME"` on tag runs.
-      4. `npm --prefix frontend ci` and `npm --prefix frontend run build`.
-      5. `python scripts/package_integration.py --out dist/ha_controller.zip`.
+      3. `python .github/scripts/versioning.py check`, plus `--tag "$GITHUB_REF_NAME"` on tag runs.
+      4. `npm --prefix custom_components/ha_controller/frontend ci` and `npm --prefix custom_components/ha_controller/frontend run build`.
+      5. `python .github/scripts/package_integration.py --out dist/ha_controller.zip`.
       6. `pip install -r esphome/requirements.txt` and `esphome compile esphome/ha-controller.yaml`.
-      7. `python scripts/collect_firmware.py --build-dir esphome/.esphome/build --version <v> --out dist`.
+      7. `python .github/scripts/collect_firmware.py --build-dir esphome/.esphome/build --version <v> --out dist`.
       8. `actions/upload-artifact@v4` (`dist`).
     - **Job `release`** (needs `build`, tag runs only): download the artifact, then `gh release create "$GITHUB_REF_NAME" dist/* --title "$GITHUB_REF_NAME" --generate-notes --verify-tag` with `GH_TOKEN`.
     - **Job `pages`** (needs `build` and `release`, tag runs only, environment `github-pages`):
       1. Checkout.
       2. For every tag from `gh release list --limit 200 --json tagName -q '.[].tagName'`, run `gh release download "$tag" -p 'ha-controller-*' -D "releases/${tag#v}"`.
-      3. `python scripts/build_pages.py --web esphome/web --releases releases --latest <v> --out site`.
+      3. `python .github/scripts/build_pages.py --web esphome/web --releases releases --latest <v> --out site`.
       4. `actions/configure-pages@v5`, `actions/upload-pages-artifact@v3` (`site`) and `actions/deploy-pages@v4`.
 
 - [ ] **Step 1: Write the workflow and update `hacs.json`.**
 
 - [ ] **Step 2: Dry run.** Push the branch, run "Release" with `workflow_dispatch`, and download the `dist` artifact. Expected:
   - the `build` job is green and `release`/`pages` are skipped;
-  - the artifact holds `ha_controller.zip` (with `frontend/ha-controller-panel.js` inside) plus the three `ha-controller-0.1.0.*` files.
+  - the artifact holds `ha_controller.zip` (with `frontend/dist/ha-controller-panel.js` inside, and no `tests/` or panel sources) plus the three `ha-controller-0.1.0.*` files.
 
 - [ ] **Step 3: Write the user docs.**
   - **`docs/getting-started.md`:**
@@ -302,7 +302,7 @@ git commit -m "build: add release packaging scripts and web installer page"
   - **`docs/releasing.md`:**
     - One-time setup: Settings › Pages › Source "GitHub Actions"; repository description and topics for HACS.
     - Steps:
-      1. `python scripts/versioning.py bump X.Y.Z`
+      1. `python .github/scripts/versioning.py bump X.Y.Z`
       2. commit `chore: release X.Y.Z`
       3. `git tag vX.Y.Z && git push origin main vX.Y.Z`
       4. watch the "Release" workflow
@@ -311,7 +311,7 @@ git commit -m "build: add release packaging scripts and web installer page"
   - **`README.md`:** an "Install" section with the installer URL and the HACS custom repository, and links to `docs/getting-started.md` and `docs/README.md`.
   - **`docs/README.md`:** link the three new docs.
 
-- [ ] **Step 4: Write `.claude/skills/release/SKILL.md`** and list it in `CLAUDE.md`.
+- [ ] **Step 4: Write `.claude/skills/release/SKILL.md`** and list it in `.claude/CLAUDE.md`.
   - Frontmatter `name: release`.
   - `description:` "Use when cutting a release or changing the release pipeline: versions, release workflow, GitHub Pages installer, HACS packaging, firmware OTA URLs."
   - Body:
@@ -319,17 +319,17 @@ git commit -m "build: add release packaging scripts and web installer page"
     - The release steps from `docs/releasing.md`.
     - What each job produces.
     - OTA URLs must stay stable (`firmware/<v>/ha-controller.ota.bin`), because integrations already installed depend on them.
-    - Check `pytest tests/scripts` after any script change.
+    - Check `pytest .github/scripts/tests` after any script change.
 
 - [ ] **Step 5: Run every suite**
 
-Run: `pytest && ruff check . && python scripts/versioning.py check && npm --prefix frontend test`
+Run: `pytest custom_components/ha_controller/tests && pytest .github/scripts/tests && ruff check custom_components .github/scripts && python .github/scripts/versioning.py check && npm --prefix custom_components/ha_controller/frontend test`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add .github/workflows/release.yml hacs.json README.md docs .claude CLAUDE.md
+git add .github/workflows/release.yml hacs.json README.md docs .claude .claude/CLAUDE.md
 git commit -m "ci: release integration, firmware and web installer from tags"
 ```
 

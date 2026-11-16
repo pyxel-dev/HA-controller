@@ -5,7 +5,7 @@
 **Goal:** Build the `ha_controller` custom integration: config flow, layout validation and compilation, state builders, the sync engine that talks to the screen through ESPHome actions and events, control mapping, the websocket API and the sidebar panel registration.
 
 **Architecture:**
-- **Pure modules:** `layout.py`, `compiler.py`, `states.py` and `controls.py` hold the protocol logic. They are tested against `protocol/fixtures/`.
+- **Pure modules:** `layout.py`, `compiler.py`, `states.py` and `controls.py` hold the protocol logic. They are tested against `docs/protocol/fixtures/`.
 - **`ScreenController`:** one per config entry. It wires those modules to Home Assistant: storage, event listeners filtered by `device_id`, entity tracking, and calls to the screen's `esphome.<node>_<action>` services.
 - **`websocket.py` and `panel.py`:** expose the controller to the panel built in plan 3.
 
@@ -38,10 +38,11 @@
 **Files:**
 - Create:
   - `custom_components/ha_controller/`: `__init__.py`, `const.py`, `config_flow.py`, `manifest.json`, `strings.json`, `translations/en.json`, `brand/icon.png`, `brand/icon@2x.png`
-  - `scripts/make_brand_icon.py`, `hacs.json`
-  - `tests/conftest.py`, `tests/integration/__init__.py`, `tests/integration/helpers.py`, `tests/integration/test_config_flow.py`
+  - `.github/scripts/make_brand_icon.py`, `hacs.json`
+  - `custom_components/ha_controller/tests/conftest.py`, `custom_components/ha_controller/tests/__init__.py`, `custom_components/ha_controller/tests/helpers.py`, `custom_components/ha_controller/tests/test_config_flow.py`
   - `.github/workflows/validate.yml`
-- Modify: `requirements_test.txt`, `CLAUDE.md` (commands)
+  - `custom_components/pyproject.toml`, `custom_components/requirements_test.txt`, `custom_components/__init__.py` (empty)
+- Modify: `.github/scripts/requirements.txt` (add `pillow`), `.github/workflows/ci.yml` (job `integration`), `.claude/CLAUDE.md` (commands)
 
 **Interfaces:**
 - Produces:
@@ -54,14 +55,14 @@
     - Timings: `ONLINE_TIMEOUT = timedelta(seconds=150)`, `PUSH_RETRY = timedelta(seconds=300)`, `STATE_COALESCE_SECONDS = 0.2`, `INSTALL_TIMEOUT = 300`, `AUTO_UPDATE_RETRY = timedelta(seconds=3600)`.
     - Panel: `PANEL_URL_PATH = "ha-controller"`, `PANEL_COMPONENT = "ha-controller-panel"`, `PANEL_TITLE = "HA Controller"`, `PANEL_ICON = "mdi:remote"`, `STATIC_URL = "/ha_controller_static"`.
     - Release URLs: `FIRMWARE_BASE_URL = "https://pyxel-dev.github.io/HA-controller/firmware"`, `RELEASE_URL = "https://github.com/pyxel-dev/HA-controller/releases/tag/v{version}"`.
-  - **`tests/integration/helpers.py`:**
+  - **`custom_components/ha_controller/tests/helpers.py`:**
     - `async def register_screen(hass, *, name="HA Controller", manufacturer=MANUFACTURER, model=MODEL, mac="aa:bb:cc:dd:ee:ff") -> dr.DeviceEntry`. It adds an `esphome` `MockConfigEntry` and a device with `connections={(dr.CONNECTION_NETWORK_MAC, mac)}`.
     - `async def setup_screen(hass, device) -> MockConfigEntry`. It adds the `ha_controller` entry with `data={"device_id": device.id}` and `unique_id=device.id`, sets it up, and waits.
     - `NODE = "ha-controller-aabbcc"`.
     - `def hello(device, **overrides) -> dict`: a default hello for `NODE`, version `"0.1.0"`, protocol `"1"`, revision `"none"`, reason `"connected"`.
-    - `def load_fixture(*parts) -> Any`: reads `protocol/fixtures/...`.
+    - `def load_fixture(*parts) -> Any`: reads `docs/protocol/fixtures/...`.
 
-- [ ] **Step 1: Write the failing tests** in `tests/integration/test_config_flow.py`, plus `tests/conftest.py` with an autouse `auto_enable_custom_integrations(enable_custom_integrations)` fixture.
+- [ ] **Step 1: Write the failing tests** in `custom_components/ha_controller/tests/test_config_flow.py`, plus `custom_components/ha_controller/tests/conftest.py` with an autouse `auto_enable_custom_integrations(enable_custom_integrations)` fixture.
 
 ```python
 async def test_user_step_shows_device_selector(hass): ...            # form, step_id "user", errors {}
@@ -79,11 +80,16 @@ async def test_strings_match_english_translation():                   # strings.
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pip install -r requirements_test.txt && pytest tests/integration/test_config_flow.py -v`
+Run: `pip install -r custom_components/requirements_test.txt && pytest custom_components/ha_controller/tests/test_config_flow.py -v`
 Expected: FAIL (`ModuleNotFoundError` / integration not found).
 
 - [ ] **Step 3: Implement the skeleton.**
-  - **`requirements_test.txt`:** `pytest-homeassistant-custom-component==0.13.375`, `ruff`, `pillow`.
+  - **`custom_components/requirements_test.txt`:** `pytest-homeassistant-custom-component==0.13.375`, `ruff`.
+  - **`custom_components/pyproject.toml`:**
+    - `[tool.pytest.ini_options]`: `testpaths = ["ha_controller/tests"]`, `pythonpath = [".."]`, `asyncio_mode = "auto"`, `asyncio_default_fixture_loop_scope = "function"`.
+    - `[tool.ruff]`: `target-version = "py314"`, `line-length = 100`, lint rules `E,F,I,UP,B`.
+  - **`custom_components/__init__.py`:** empty. pytest then imports the tests as `custom_components.ha_controller.tests.*`, so the integration is never imported a second time under the name `ha_controller`. Tests import the integration only as `custom_components.ha_controller`.
+  - **`.github/scripts/requirements.txt`:** add `pillow`, for the brand icon script.
   - **`manifest.json`**, keys in hassfest order:
 
     ```json
@@ -123,7 +129,7 @@ Expected: FAIL (`ModuleNotFoundError` / integration not found).
     - Error: `not_ha_controller` "This device is not an HA Controller screen."
     - Abort: `already_configured` "This screen is already set up."
   - **`hacs.json`:** `{"name": "HA Controller", "homeassistant": "2026.10.0"}`.
-  - **`scripts/make_brand_icon.py`:** a Pillow script that writes `brand/icon.png` (256×256) and `brand/icon@2x.png` (512×512), scaled from a 512 design:
+  - **`.github/scripts/make_brand_icon.py`:** a Pillow script that writes `brand/icon.png` (256×256) and `brand/icon@2x.png` (512×512), scaled from a 512 design:
     - transparent background;
     - a filled circle `#111827` with radius 240;
     - a ring `#374151`, width 36, radius 170;
@@ -134,20 +140,22 @@ Expected: FAIL (`ModuleNotFoundError` / integration not found).
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/integration/test_config_flow.py -v && ruff check .`
+Run: `pytest custom_components/ha_controller/tests/test_config_flow.py -v && ruff check custom_components`
 Expected: PASS.
 
-- [ ] **Step 5: Add validation CI** in `.github/workflows/validate.yml`:
+- [ ] **Step 5: Add CI.**
+  - Add job `integration` to `.github/workflows/ci.yml`: setup-python 3.14, `pip install -r custom_components/requirements_test.txt`, `ruff check custom_components`, `pytest custom_components/ha_controller/tests`.
+  - Create `.github/workflows/validate.yml`:
   - Triggers: `push`, `pull_request`, `schedule` (`cron: "0 0 * * *"`) and `workflow_dispatch`.
   - Job `hassfest`: checkout, then `home-assistant/actions/hassfest@master`.
   - Job `hacs`: `hacs/action@main` with `category: integration`.
   - If HACS reports the repository description or topics checks, the owner sets them once on GitHub. Description: "Home Assistant remote on the Waveshare ESP32-S3 1.75\" round AMOLED". Topics: `home-assistant`, `hacs`, `esphome`, `integration`.
-  - Add to the `CLAUDE.md` commands: `pytest tests/integration` and `python scripts/make_brand_icon.py`.
+  - Add to the `.claude/CLAUDE.md` commands: `pytest custom_components/ha_controller/tests` and `python .github/scripts/make_brand_icon.py`.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add custom_components/ha_controller scripts/make_brand_icon.py hacs.json requirements_test.txt tests .github/workflows/validate.yml CLAUDE.md
+git add custom_components/ha_controller .github/scripts/make_brand_icon.py hacs.json custom_components/requirements_test.txt custom_components/pyproject.toml custom_components/__init__.py .github/scripts/requirements.txt .github/workflows/ci.yml .github/workflows/validate.yml .claude/CLAUDE.md
 git commit -m "feat(integration): add integration skeleton and config flow"
 ```
 
@@ -156,7 +164,7 @@ git commit -m "feat(integration): add integration skeleton and config flow"
 ### Task 2: Layout validation
 
 **Files:**
-- Create: `custom_components/ha_controller/layout.py`, `tests/integration/test_layout.py`
+- Create: `custom_components/ha_controller/layout.py`, `custom_components/ha_controller/tests/test_layout.py`
 
 **Interfaces:**
 - Produces:
@@ -191,7 +199,7 @@ def test_sleep_timeout_bounds(value, ok): ...  # reference with settings.sleep_t
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/integration/test_layout.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_layout.py -v`
 Expected: FAIL (`ImportError`).
 
 - [ ] **Step 3: Implement `validate_layout`.** It runs in three phases, following spec §6.
@@ -215,13 +223,13 @@ Expected: FAIL (`ImportError`).
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/integration/test_layout.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_layout.py -v`
 Expected: PASS (all 4 valid and 23 invalid fixtures, plus the unit tests).
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add custom_components/ha_controller/layout.py tests/integration/test_layout.py
+git add custom_components/ha_controller/layout.py custom_components/ha_controller/tests/test_layout.py
 git commit -m "feat(integration): validate layouts against protocol rules"
 ```
 
@@ -230,7 +238,7 @@ git commit -m "feat(integration): validate layouts against protocol rules"
 ### Task 3: Layout compiler
 
 **Files:**
-- Create: `custom_components/ha_controller/compiler.py`, `tests/integration/test_compiler.py`
+- Create: `custom_components/ha_controller/compiler.py`, `custom_components/ha_controller/tests/test_compiler.py`
 
 **Interfaces:**
 - Consumes: `normalize_emoji` (Task 2).
@@ -259,20 +267,20 @@ def test_huge_layout_exceeds_payload_limit():
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/integration/test_compiler.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_compiler.py -v`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement the three functions in `compiler.py`, following spec §7.3.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/integration/test_compiler.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_compiler.py -v`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add custom_components/ha_controller/compiler.py tests/integration/test_compiler.py
+git add custom_components/ha_controller/compiler.py custom_components/ha_controller/tests/test_compiler.py
 git commit -m "feat(integration): compile layouts into device payloads"
 ```
 
@@ -281,7 +289,7 @@ git commit -m "feat(integration): compile layouts into device payloads"
 ### Task 4: State builders
 
 **Files:**
-- Create: `custom_components/ha_controller/states.py`, `tests/integration/test_states.py`
+- Create: `custom_components/ha_controller/states.py`, `custom_components/ha_controller/tests/test_states.py`
 
 **Interfaces:**
 - Produces:
@@ -315,20 +323,20 @@ def test_chunk_updates_keeps_oversize_update_alone(): ...
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/integration/test_states.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_states.py -v`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement the builders in `states.py`, following spec §7.7.** `—` is U+2014. The climate unit is `hass.config.units.temperature_unit`.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/integration/test_states.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_states.py -v`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add custom_components/ha_controller/states.py tests/integration/test_states.py
+git add custom_components/ha_controller/states.py custom_components/ha_controller/tests/test_states.py
 git commit -m "feat(integration): build screen state updates"
 ```
 
@@ -337,7 +345,7 @@ git commit -m "feat(integration): build screen state updates"
 ### Task 5: Layout store and ScreenController sync engine
 
 **Files:**
-- Create: `custom_components/ha_controller/store.py`, `custom_components/ha_controller/controller.py`, `tests/integration/test_controller.py`
+- Create: `custom_components/ha_controller/store.py`, `custom_components/ha_controller/controller.py`, `custom_components/ha_controller/tests/test_controller.py`
 - Modify: `custom_components/ha_controller/__init__.py`
 
 **Interfaces:**
@@ -383,7 +391,7 @@ async def test_status_reports_device(hass): ...                               # 
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/integration/test_controller.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_controller.py -v`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement the controller, following spec §7.5.**
@@ -399,13 +407,13 @@ Expected: FAIL.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/integration -v`
+Run: `pytest custom_components/ha_controller/tests -v`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add custom_components/ha_controller tests/integration/test_controller.py
+git add custom_components/ha_controller custom_components/ha_controller/tests/test_controller.py
 git commit -m "feat(integration): sync layouts and states with the screen"
 ```
 
@@ -414,7 +422,7 @@ git commit -m "feat(integration): sync layouts and states with the screen"
 ### Task 6: Control events
 
 **Files:**
-- Create: `custom_components/ha_controller/controls.py`, `tests/integration/test_controls.py`
+- Create: `custom_components/ha_controller/controls.py`, `custom_components/ha_controller/tests/test_controls.py`
 - Modify: `custom_components/ha_controller/controller.py`
 
 **Interfaces:**
@@ -439,20 +447,20 @@ async def test_service_error_is_swallowed(hass, caplog): ...  # registered light
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/integration/test_controls.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_controls.py -v`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `resolve_control` and the controller handler.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/integration -v`
+Run: `pytest custom_components/ha_controller/tests -v`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add custom_components/ha_controller tests/integration/test_controls.py
+git add custom_components/ha_controller custom_components/ha_controller/tests/test_controls.py
 git commit -m "feat(integration): map screen controls to service calls"
 ```
 
@@ -461,7 +469,7 @@ git commit -m "feat(integration): map screen controls to service calls"
 ### Task 7: Websocket API
 
 **Files:**
-- Create: `custom_components/ha_controller/websocket.py`, `tests/integration/test_websocket.py`
+- Create: `custom_components/ha_controller/websocket.py`, `custom_components/ha_controller/tests/test_websocket.py`
 - Modify: `custom_components/ha_controller/__init__.py` (call `async_register_websocket(hass)` in `async_setup`)
 
 **Interfaces:**
@@ -486,20 +494,20 @@ async def test_commands_require_admin(hass, hass_ws_client, hass_admin_user): ..
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/integration/test_websocket.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_websocket.py -v`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `websocket.py`.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest tests/integration -v`
+Run: `pytest custom_components/ha_controller/tests -v`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add custom_components/ha_controller tests/integration/test_websocket.py
+git add custom_components/ha_controller custom_components/ha_controller/tests/test_websocket.py
 git commit -m "feat(integration): add websocket API for the panel"
 ```
 
@@ -509,15 +517,15 @@ git commit -m "feat(integration): add websocket API for the panel"
 
 **Files:**
 - Create:
-  - `custom_components/ha_controller/panel.py`, `custom_components/ha_controller/frontend/.gitkeep`
-  - `tests/integration/test_panel.py`
+  - `custom_components/ha_controller/panel.py`
+  - `custom_components/ha_controller/tests/test_panel.py`
   - `docs/development.md`, `.claude/agents/ha-integration-reviewer.md`
-- Modify: `custom_components/ha_controller/__init__.py`, `docs/README.md`, `CLAUDE.md`
+- Modify: `custom_components/ha_controller/__init__.py`, `docs/README.md`, `.claude/CLAUDE.md`
 
 **Interfaces:**
-- Consumes: the plan 3 bundle path `custom_components/ha_controller/frontend/ha-controller-panel.js`.
+- Consumes: the plan 3 bundle path `custom_components/ha_controller/frontend/dist/ha-controller-panel.js`.
 - Produces:
-  - `async def async_register_panel(hass, version: str) -> None`. It registers `StaticPathConfig(STATIC_URL, <integration dir>/frontend, True)` once per Home Assistant run, guarded by a `hass.data` flag. If `PANEL_URL_PATH` is not already in `hass.data[frontend.DATA_PANELS]`, it registers the panel with:
+  - `async def async_register_panel(hass, version: str) -> None`. It registers `StaticPathConfig(f"{STATIC_URL}/ha-controller-panel.js", <integration dir>/frontend/dist/ha-controller-panel.js, True)` once per Home Assistant run, guarded by a `hass.data` flag. This is a file route, so a missing bundle never breaks setup. If `PANEL_URL_PATH` is not already in `hass.data[frontend.DATA_PANELS]`, it registers the panel with:
 
     ```python
     await panel_custom.async_register_panel(
@@ -546,26 +554,26 @@ async def test_static_path_registered_once(hass): ...               # patch hass
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `pytest tests/integration/test_panel.py -v`
+Run: `pytest custom_components/ha_controller/tests/test_panel.py -v`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `panel.py` and wire it into `async_setup_entry` / `async_unload_entry`.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `pytest -v && ruff check .`
+Run: `pytest custom_components/ha_controller/tests -v && ruff check custom_components`
 Expected: PASS.
 
 - [ ] **Step 5: Write the docs and the reviewer agent.**
   - **`docs/development.md`:** create it with sections "Prerequisites" (Python 3.14, Node 24, ESPHome; the later plans fill these in) and "Home Assistant integration". The integration section covers:
-    - venv setup and `pip install -r requirements_test.txt`;
-    - `pytest`;
+    - venv setup and `pip install -r custom_components/requirements_test.txt`;
+    - `pytest custom_components/ha_controller/tests`;
     - running a development Home Assistant, by symlinking `custom_components/ha_controller` into `<config>/custom_components/`;
     - how hello / set_layout traffic shows up under Developer tools › Events (`esphome.ha_controller_hello`).
   - **`docs/README.md`:** link the new doc.
   - **`.claude/agents/ha-integration-reviewer.md`:**
     - Frontmatter `name: ha-integration-reviewer`, `tools: Read, Grep, Glob, Bash`.
-    - `description:` "Reviews changes under custom_components/ha_controller and tests/integration against Home Assistant development rules. Use before merging integration changes."
+    - `description:` "Reviews changes under custom_components/ha_controller and custom_components/ha_controller/tests against Home Assistant development rules. Use before merging integration changes."
     - Checklist:
       - async only, with no blocking I/O in the loop;
       - `entry.runtime_data`, with no new `hass.data` globals beyond the panel flags;
@@ -577,11 +585,11 @@ Expected: PASS.
       - every branch tested;
       - protocol changes routed to the `protocol-change` skill.
     - Output: findings as `file:line — issue — fix`.
-  - **`CLAUDE.md`:** list the agent.
+  - **`.claude/CLAUDE.md`:** list the agent.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add custom_components/ha_controller tests/integration/test_panel.py docs .claude CLAUDE.md
+git add custom_components/ha_controller custom_components/ha_controller/tests/test_panel.py docs .claude .claude/CLAUDE.md
 git commit -m "feat(integration): register the sidebar panel"
 ```

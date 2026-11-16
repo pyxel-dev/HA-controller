@@ -6,7 +6,7 @@
 
 **Architecture:** Two local external components.
 - `ha_controller`:
-  - **Pure C++17 modules** with no ESPHome or LVGL headers, unit-tested on the host against `protocol/fixtures/`: `layout`, `states`, `knob`, `format`, `gesture`, `color`, `hold`.
+  - **Pure C++17 modules** with no ESPHome or LVGL headers, unit-tested on the host against `docs/protocol/fixtures/`: `layout`, `states`, `knob`, `format`, `gesture`, `color`, `hold`.
   - **LVGL 9.5 modules:** `pager` (gestures, animation, edge hints) and `widgets` (block views).
   - **`HaController`:** the ESPHome component that glues them to the native API actions and events declared in YAML.
 - `axp2101_battery`: reads the PMU.
@@ -84,7 +84,7 @@ uint32_t text_color_for(uint32_t rgb);                          // 0x000000 if l
   - `FetchContent` doctest `v2.4.12` (GIT_TAG) and ArduinoJson `v7.4.2` (GIT_TAG; same major as ESPHome's bundled 7.x).
   - Target `unit_tests`: every `test_*.cpp` plus the pure `.cpp` files from `../components/ha_controller/`.
   - Include path `../components`.
-  - `FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../protocol/fixtures"`.
+  - `FIXTURES_DIR="${CMAKE_CURRENT_SOURCE_DIR}/../../docs/protocol/fixtures"`.
   - `add_test(unit_tests …)`.
 
 - [ ] **Step 2: Write the failing tests**
@@ -289,7 +289,7 @@ git commit -m "feat(firmware): model edge swipes"
   - `esphome/components/axp2101_battery/__init__.py`, `axp2101_battery.h`, `axp2101_battery.cpp`, `axp2101_regs.h`
   - `esphome/tests/test_axp2101.cpp`
   - `.github/workflows/firmware.yml`
-- Modify: `esphome/tests/CMakeLists.txt` (include path for `axp2101_battery`), `CLAUDE.md` (commands)
+- Modify: `esphome/tests/CMakeLists.txt` (include path for `axp2101_battery`), `.claude/CLAUDE.md` (commands)
 
 **Interfaces:**
 - Produces:
@@ -424,10 +424,10 @@ number:
 
 - [ ] **Step 6: Compile**
 
-Run: `python3.13 -m venv .venv-esphome && .venv-esphome/bin/pip install -r esphome/requirements.txt && .venv-esphome/bin/esphome compile esphome/ha-controller.yaml`
+Run: `python3.13 -m venv esphome/.venv && esphome/.venv/bin/pip install -r esphome/requirements.txt && esphome/.venv/bin/esphome compile esphome/ha-controller.yaml`
 Expected: `SUCCESS`, and the image fits the app partition (ESPHome sizes it for 16 MB). If a font option is rejected (e.g. `glyphsets`), replace it with an explicit `glyphs:` string covering U+0020–U+007E, U+00A0–U+017F and `°—…’“”€`. Record the change in `docs/hardware.md` in Task 9.
 
-- [ ] **Step 7: Hardware check.** Flash over USB-C with `.venv-esphome/bin/esphome run esphome/ha-controller.yaml`. Expected:
+- [ ] **Step 7: Hardware check.** Flash over USB-C with `esphome/.venv/bin/esphome run esphome/ha-controller.yaml`. Expected:
   - the round display shows "HA Controller", the version and 💡, centred;
   - tapping near the top/right/bottom/left edges logs about `(233,5)` / `(460,233)` / `(233,460)` / `(5,233)`. If not, fix `transform` (`mirror_x`, `mirror_y`, `swap_xy`) and repeat;
   - with a battery: `Battery` reads 0–100 %, `Battery voltage` 3.3–4.3 V, and `Charging` turns on when USB is plugged in;
@@ -436,7 +436,7 @@ Expected: `SUCCESS`, and the image fits the app partition (ESPHome sizes it for 
   - Wi-Fi provisioning works through the `HA Controller` access point and its captive portal.
 
 - [ ] **Step 8: Add the firmware CI.** In `.github/workflows/firmware.yml`, workflow `Firmware`:
-  - Triggers: `push` to `main` and `pull_request`, on paths `esphome/**`, `protocol/**`, `custom_components/ha_controller/emoji.json` and `.github/workflows/firmware.yml`.
+  - Triggers: `push` to `main` and `pull_request`, on paths `esphome/**`, `docs/protocol/**`, `custom_components/ha_controller/emoji.json` and `.github/workflows/firmware.yml`.
   - Job `host-tests`: `cmake -S esphome/tests -B build/tests`, `cmake --build build/tests`, `ctest --test-dir build/tests --output-on-failure`.
   - Job `compile`:
     - `actions/setup-python@v5` with Python 3.13;
@@ -444,12 +444,12 @@ Expected: `SUCCESS`, and the image fits the app partition (ESPHome sizes it for 
     - `pip install -r esphome/requirements.txt`;
     - `esphome compile esphome/ha-controller.yaml`.
 
-  Add the host-test and compile commands to `CLAUDE.md`.
+  Add the host-test and compile commands to `.claude/CLAUDE.md`.
 
 - [ ] **Step 9: Commit**
 
 ```bash
-git add esphome .github/workflows/firmware.yml CLAUDE.md
+git add esphome .github/workflows/firmware.yml .claude/CLAUDE.md
 git commit -m "feat(firmware): bring up the Waveshare AMOLED 1.75 board"
 ```
 
@@ -462,7 +462,7 @@ git commit -m "feat(firmware): bring up the Waveshare AMOLED 1.75 board"
   - `esphome/components/ha_controller/__init__.py`, `ha_controller.h`, `ha_controller.cpp`
   - `esphome/components/ha_controller/widgets.h`, `widgets.cpp` (placeholder views in this task)
   - `esphome/simulator.yaml`
-- Modify: `esphome/packages/ui.yaml`, `.github/workflows/firmware.yml` (simulator compile), `CLAUDE.md`
+- Modify: `esphome/packages/ui.yaml`, `.github/workflows/firmware.yml` (simulator compile), `.claude/CLAUDE.md`
 
 **Interfaces:**
 - Consumes: Tasks 1–2 (parsers), plan 2 (hello handling, `set_layout`/`set_states` callers).
@@ -530,22 +530,22 @@ std::unique_ptr<BlockView> make_block_view(lv_obj_t *parent, const Block &block,
 
 - [ ] **Step 3: Compile both configs**
 
-Run: `.venv-esphome/bin/esphome compile esphome/ha-controller.yaml && .venv-esphome/bin/esphome compile esphome/simulator.yaml`
+Run: `esphome/.venv/bin/esphome compile esphome/ha-controller.yaml && esphome/.venv/bin/esphome compile esphome/simulator.yaml`
 Expected: both `SUCCESS`. The simulator needs SDL2: `brew install sdl2` or `apt install libsdl2-dev`.
 
 - [ ] **Step 4: End-to-end check with Home Assistant**, using plan 2's integration and plan 3's built panel.
-  1. Run `.venv-esphome/bin/esphome run esphome/simulator.yaml`. The window shows "Waiting for Home Assistant".
+  1. Run `esphome/.venv/bin/esphome run esphome/simulator.yaml`. The window shows "Waiting for Home Assistant".
   2. In Home Assistant, add an ESPHome device on `<dev machine IP>:6053`, then add the HA Controller integration and pick "HA Controller Simulator".
   3. Within 5 s of the connection, the simulator shows "No blocks yet". Developer tools › Events shows `esphome.ha_controller_hello` with reasons `connected` and then `applied`.
   4. In the panel, add three blocks and save. The simulator shows the start block's name on its background.
   5. Heartbeat hellos arrive every 60 s with a revision equal to the panel's.
 
-- [ ] **Step 5: Extend CI and the docs.** In `firmware.yml` `compile`, add `sudo apt-get install -y libsdl2-dev` and `esphome compile esphome/simulator.yaml`. Add the simulator commands to `CLAUDE.md`.
+- [ ] **Step 5: Extend CI and the docs.** In `firmware.yml` `compile`, add `sudo apt-get install -y libsdl2-dev` and `esphome compile esphome/simulator.yaml`. Add the simulator commands to `.claude/CLAUDE.md`.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add esphome .github/workflows/firmware.yml CLAUDE.md
+git add esphome .github/workflows/firmware.yml .claude/CLAUDE.md
 git commit -m "feat(firmware): receive layouts and talk to Home Assistant"
 ```
 
@@ -587,7 +587,7 @@ class Pager {
 
 - [ ] **Step 2: Compile both configs**
 
-Run: `.venv-esphome/bin/esphome compile esphome/ha-controller.yaml && .venv-esphome/bin/esphome compile esphome/simulator.yaml`
+Run: `esphome/.venv/bin/esphome compile esphome/ha-controller.yaml && esphome/.venv/bin/esphome compile esphome/simulator.yaml`
 Expected: `SUCCESS`.
 
 - [ ] **Step 3: Simulator check.** Build the reference map in the panel: Kitchen start, Lights above, Hello World left, Bedroom below Hello World. Expected:
@@ -642,7 +642,7 @@ git commit -m "feat(firmware): navigate between blocks with edge swipes"
 
 - [ ] **Step 2: Compile both configs**
 
-Run: `.venv-esphome/bin/esphome compile esphome/ha-controller.yaml && .venv-esphome/bin/esphome compile esphome/simulator.yaml`
+Run: `esphome/.venv/bin/esphome compile esphome/ha-controller.yaml && esphome/.venv/bin/esphome compile esphome/simulator.yaml`
 Expected: `SUCCESS`.
 
 - [ ] **Step 3: Simulator + Home Assistant check.** Use the reference map with real or template entities. Expected:
@@ -734,7 +734,7 @@ Expected: PASS.
 
 - [ ] **Step 5: Implement the component additions and the YAML wiring, then compile both configs**
 
-Run: `.venv-esphome/bin/esphome compile esphome/ha-controller.yaml && .venv-esphome/bin/esphome compile esphome/simulator.yaml`
+Run: `esphome/.venv/bin/esphome compile esphome/ha-controller.yaml && esphome/.venv/bin/esphome compile esphome/simulator.yaml`
 Expected: `SUCCESS`.
 
 - [ ] **Step 6: Simulator check.** Expected:
@@ -764,7 +764,7 @@ git commit -m "feat(firmware): sleep after the configured delay and wake on touc
   - `docs/hardware.md`
   - `.claude/skills/firmware-dev/SKILL.md`, `.claude/skills/add-widget/SKILL.md`
   - `.claude/agents/firmware-reviewer.md`
-- Modify: `esphome/ha-controller.yaml`, `docs/development.md` ("Firmware" section), `docs/README.md`, `CLAUDE.md`
+- Modify: `esphome/ha-controller.yaml`, `docs/development.md` ("Firmware" section), `docs/README.md`, `.claude/CLAUDE.md`
 
 **Interfaces:**
 - Produces (used by plan 5): the device API action `install_firmware` (`url: string`, `md5_url: string`):
@@ -795,7 +795,7 @@ api:
 
 - [ ] **Step 1: Add the action, then compile**
 
-Run: `.venv-esphome/bin/esphome compile esphome/ha-controller.yaml`
+Run: `esphome/.venv/bin/esphome compile esphome/ha-controller.yaml`
 Expected: `SUCCESS`.
 
 - [ ] **Step 2: OTA check on hardware.**
@@ -860,16 +860,16 @@ Expected: `SUCCESS`.
       - host tests for new pure logic;
       - both configs compile.
     - Output: `file:line — issue — fix`.
-  - **`CLAUDE.md`:** list the skills and the agent.
+  - **`.claude/CLAUDE.md`:** list the skills and the agent.
 
 - [ ] **Step 5: Run every suite**
 
-Run: `pytest && npm --prefix frontend test && ctest --test-dir build/tests --output-on-failure`
+Run: `pytest custom_components/ha_controller/tests && pytest .github/scripts/tests && npm --prefix custom_components/ha_controller/frontend test && ctest --test-dir build/tests --output-on-failure`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
 
 ```bash
-git add esphome/ha-controller.yaml docs .claude CLAUDE.md
+git add esphome/ha-controller.yaml docs .claude .claude/CLAUDE.md
 git commit -m "feat(firmware): install firmware over the air on request"
 ```

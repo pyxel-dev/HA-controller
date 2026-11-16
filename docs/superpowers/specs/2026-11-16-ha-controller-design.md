@@ -53,17 +53,18 @@ Turn the Waveshare ESP32-S3-Touch-AMOLED-1.75 into a Home Assistant remote. In a
 
 | Path | Content |
 |---|---|
-| `docs/` | User and developer documentation. `docs/superpowers/` holds this spec and the plans. |
-| `protocol/fixtures/` | Shared test fixtures: the cross-language contract |
-| `custom_components/ha_controller/` | Home Assistant integration (Python) |
-| `custom_components/ha_controller/emoji.json` | Canonical list of supported emoji, read by the firmware build, the panel and the integration |
-| `custom_components/ha_controller/frontend/` | Built panel bundle (generated, git-ignored) |
-| `frontend/` | Panel source (TypeScript, Lit, Vite) |
-| `esphome/` | Firmware: device config, packages, simulator config, external components, host tests, web installer page |
-| `scripts/` | Versioning, packaging, GitHub Pages site builder |
-| `tests/` | Python tests (protocol fixtures, docs, integration, scripts) |
-| `.claude/` | Claude Code skills and agents |
+The repository root holds no files except `README.md` (GitHub and HACS landing page), `hacs.json` (HACS reads it only at the root) and `.gitignore`. Everything else lives in a folder:
+
+| Path | Content |
+|---|---|
+| `docs/` | User and developer documentation. `docs/protocol/` holds the protocol doc (`README.md`) and its shared fixtures (`fixtures/`), the cross-language contract. `docs/superpowers/` holds this spec and the plans. |
+| `custom_components/` | Everything for the Home Assistant integration. HACS allows a single directory here, so development files live inside it, or next to it as plain files. |
+| `custom_components/ha_controller/` | The integration (Python). Also holds `emoji.json` (canonical emoji list, also read by the firmware build and the panel), `brand/`, `tests/` (pytest), and `frontend/` (panel source in TypeScript, Lit and Vite, built to `frontend/dist/`, which is git-ignored). |
+| `custom_components/pyproject.toml`, `requirements_test.txt`, `__init__.py` | Python test and lint configuration for the integration. The empty `__init__.py` keeps test imports under `custom_components.ha_controller`. |
+| `esphome/` | Everything for the firmware: device config, packages, simulator config, external components, C++ host tests, web installer page, `requirements.txt` (ESPHome version) and its venv (`esphome/.venv`, git-ignored) |
 | `.github/workflows/` | CI, firmware CI, release |
+| `.github/scripts/` | Release and repository-check tooling (versioning, packaging, GitHub Pages site builder, docs and fixture checks), with its own `pyproject.toml`, `requirements.txt` and `tests/` |
+| `.claude/` | `CLAUDE.md`, Claude Code skills and agents |
 | `3D_models/`, `files/` | Existing enclosure models (unchanged) |
 
 ## 4. Hardware & firmware platform
@@ -183,7 +184,7 @@ A custom block with no items shows its name centred.
 
 ## 6. Layout model (integration and panel)
 
-The layout is stored per screen under the Home Assistant storage key `ha_controller.layout.<entry_id>` and exchanged with the panel over websocket. The reference layout `protocol/fixtures/layouts/valid/reference.json` mirrors the screenshot:
+The layout is stored per screen under the Home Assistant storage key `ha_controller.layout.<entry_id>` and exchanged with the panel over websocket. The reference layout `docs/protocol/fixtures/layouts/valid/reference.json` mirrors the screenshot:
 
 ```json
 { "version": 1, "start": "b1", "settings": { "sleep_timeout": 20 }, "blocks": [
@@ -235,7 +236,7 @@ Entities that do not exist (yet) are valid; the screen shows them as unavailable
 
 ## 7. Device protocol v1 (normative)
 
-`PROTOCOL_VERSION = 1`. `docs/protocol.md` is the living copy of this section. `protocol/fixtures/` pins it with examples, used by the tests of all three implementations.
+`PROTOCOL_VERSION = 1`. `docs/protocol/README.md` is the living copy of this section. `docs/protocol/fixtures/` pins it with examples, used by the tests of all three implementations.
 
 **7.1 Actions (Home Assistant → screen).** Services `esphome.<node>_<action>`:
 
@@ -367,13 +368,13 @@ Anything else is ignored: an unknown block, a custom block, an unparsable value.
 - **One version:** a single SemVer version `X.Y.Z` for the whole repository, stored in three places:
   - `custom_components/ha_controller/manifest.json` (`version`)
   - `esphome/version.yaml` (`substitutions.project_version`)
-  - `frontend/package.json` (`version`)
+  - `custom_components/ha_controller/frontend/package.json` (`version`)
 
-  `scripts/versioning.py check [--tag vX.Y.Z]` fails CI on any mismatch, and `scripts/versioning.py bump X.Y.Z` rewrites all three. The initial version is `0.1.0`.
+  `.github/scripts/versioning.py check [--tag vX.Y.Z]` fails CI on any mismatch, and `.github/scripts/versioning.py bump X.Y.Z` rewrites all three. The initial version is `0.1.0`.
 - **Release:** pushing tag `vX.Y.Z` cuts a release. The release workflow:
   1. verifies the versions;
   2. builds the panel;
-  3. packages `ha_controller.zip` (the contents of `custom_components/ha_controller/`, with the built panel);
+  3. packages `ha_controller.zip`: the contents of `custom_components/ha_controller/` without `tests/` and the panel sources, plus the built panel `frontend/dist/ha-controller-panel.js`;
   4. compiles the firmware;
   5. publishes a GitHub release with `ha_controller.zip`, `ha-controller-X.Y.Z.factory.bin`, `ha-controller-X.Y.Z.ota.bin` and `ha-controller-X.Y.Z.ota.bin.md5`.
 - **GitHub Pages:** the release workflow then rebuilds `https://pyxel-dev.github.io/HA-controller/` from the release assets:
@@ -407,7 +408,7 @@ Anything else is ignored: an unknown block, a custom block, an unparsable value.
 
 ## 12. Testing strategy
 
-- **Shared fixtures** in `protocol/fixtures/`, read by the Python, TypeScript and C++ tests:
+- **Shared fixtures** in `docs/protocol/fixtures/`, read by the Python, TypeScript and C++ tests:
   - `layouts/valid`
   - `layouts/invalid` (expected code + ref)
   - `payloads/valid` (stored layout + golden payload)
@@ -425,7 +426,7 @@ Anything else is ignored: an unknown block, a custom block, an unparsable value.
 
 ## 13. Developer guidance (Claude Code)
 
-- `CLAUDE.md`: purpose; rules (English only, one version, protocol changes go through the protocol skill, TDD); repository map; commands.
+- `.claude/CLAUDE.md`: purpose; rules (English only, one version, protocol changes go through the protocol skill, TDD); repository map; commands.
 - Skills (`.claude/skills/`): `protocol-change`, `add-widget`, `firmware-dev`, `release`.
 - Agents (`.claude/agents/`): `protocol-guardian`, `ha-integration-reviewer`, `firmware-reviewer`.
 

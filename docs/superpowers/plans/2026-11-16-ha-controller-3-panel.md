@@ -4,8 +4,8 @@
 
 **Goal:** Build the Home Assistant sidebar panel where the user edits each screen's block map. The map is laid out exactly the way navigation works on the screen ([reference screenshot](../specs/assets/editor-reference.png)).
 
-**Architecture:** A Lit + TypeScript web component bundled by Vite into one ES module. Vite writes it to `custom_components/ha_controller/frontend/ha-controller-panel.js`, which plan 2's `panel.py` serves.
-- **Model:** pure functions in `src/model/` hold all editing logic (grid, validation, edits, colours, emoji). Vitest tests them against `protocol/fixtures/`.
+**Architecture:** A Lit + TypeScript web component bundled by Vite into one ES module. Vite writes it to `custom_components/ha_controller/frontend/dist/ha-controller-panel.js`, which plan 2's `panel.py` serves.
+- **Model:** pure functions in `src/model/` hold all editing logic (grid, validation, edits, colours, emoji). Vitest tests them against `docs/protocol/fixtures/`.
 - **Components:** they only render and emit events.
 - **Websocket:** the panel talks to the integration through plan 2's commands.
 - **Dev harness:** `npm run dev` runs the panel against an in-memory mock `hass`.
@@ -27,7 +27,7 @@
   - `--divider-color` (fallback `rgba(0,0,0,.12)`)
   - `--error-color` (fallback `#db4437`)
 - **Strings:** all UI strings are in English and live in `src/messages.ts`.
-- **Versioning:** `frontend/package.json` `version` is `0.1.0`; plan 5's versioning script keeps it in sync.
+- **Versioning:** `custom_components/ha_controller/frontend/package.json` `version` is `0.1.0`; plan 5's versioning script keeps it in sync.
 
 ## Review Focus
 
@@ -43,10 +43,10 @@
 
 **Files:**
 - Create:
-  - `frontend/package.json`, `frontend/package-lock.json`, `frontend/tsconfig.json`, `frontend/vite.config.ts`
-  - `frontend/src/types.ts`, `frontend/src/model/grid.ts`, `frontend/src/model/validate.ts`, `frontend/src/model/emoji.ts`
-  - `frontend/test/fixtures.ts`, `frontend/test/grid.test.ts`, `frontend/test/validate.test.ts`
-- Modify: `.github/workflows/ci.yml` (job `frontend`), `CLAUDE.md` (commands)
+  - `custom_components/ha_controller/frontend/package.json`, `custom_components/ha_controller/frontend/package-lock.json`, `custom_components/ha_controller/frontend/tsconfig.json`, `custom_components/ha_controller/frontend/vite.config.ts`
+  - `custom_components/ha_controller/frontend/src/types.ts`, `custom_components/ha_controller/frontend/src/model/grid.ts`, `custom_components/ha_controller/frontend/src/model/validate.ts`, `custom_components/ha_controller/frontend/src/model/emoji.ts`
+  - `custom_components/ha_controller/frontend/test/fixtures.ts`, `custom_components/ha_controller/frontend/test/grid.test.ts`, `custom_components/ha_controller/frontend/test/validate.test.ts`
+- Modify: `.github/workflows/ci.yml` (job `frontend`), `.claude/CLAUDE.md` (commands)
 
 **Interfaces:**
 - Produces:
@@ -67,8 +67,8 @@
     - `canDelete(layout, id): {ok: true} | {ok: false, reason: "start" | "disconnects"}`
     - `gridBounds(cells: Cell[]): {minX, maxX, minY, maxY}`
   - **`model/validate.ts`:** `validateLayout(layout: unknown, emoji: ReadonlySet<string>): LayoutError[]`. Same phases and order as plan 2 Task 2.
-  - **`model/emoji.ts`:** `SUPPORTED_EMOJI: readonly string[]` imported from `../../../custom_components/ha_controller/emoji.json`, `EMOJI_SET`, `normalizeEmoji(text): string`.
-  - **`test/fixtures.ts`:** `validLayouts`, `invalidLayouts` and `colors`, loaded with `import.meta.glob("../../protocol/fixtures/…", {eager: true, import: "default"})`.
+  - **`model/emoji.ts`:** `SUPPORTED_EMOJI: readonly string[]` imported from `../../../emoji.json` (relative to `src/model/`), `EMOJI_SET`, `normalizeEmoji(text): string`.
+  - **`test/fixtures.ts`:** `validLayouts`, `invalidLayouts` and `colors`, loaded with `import.meta.glob("../../../../docs/protocol/fixtures/…", {eager: true, import: "default"})`.
 
 - [ ] **Step 1: Scaffold the tooling.**
   - **`package.json`:** `"type": "module"`, `"private": true`, `"version": "0.1.0"`.
@@ -77,8 +77,8 @@
   - **`tsconfig.json`:** `strict`, `target` and `lib` ES2022 + DOM, `module: ESNext`, `moduleResolution: Bundler`, `experimentalDecorators: true`, `useDefineForClassFields: false`, `resolveJsonModule: true`, `noEmit: true`.
   - **`vite.config.ts`:**
     - Library mode: entry `src/ha-controller-panel.ts`, format `es`, file name `ha-controller-panel.js`.
-    - `outDir: "../custom_components/ha_controller/frontend"`, `emptyOutDir: false`, `target: "es2022"`, with `lit` bundled.
-    - `server.fs.allow: [".."]`.
+    - `outDir: "dist"`, `emptyOutDir: true`, `target: "es2022"`, with `lit` bundled.
+    - `server.fs.allow: ["../../.."]` (the repository root, for the fixtures and `emoji.json`).
     - `test.environment: "happy-dom"`.
 
   Run `npm install`.
@@ -106,7 +106,7 @@ for (const [name, c] of Object.entries(invalidLayouts)) expect(validateLayout(c.
 
 - [ ] **Step 3: Run the tests to verify they fail**
 
-Run: `npm --prefix frontend test`
+Run: `npm --prefix custom_components/ha_controller/frontend test`
 Expected: FAIL (modules missing).
 
 - [ ] **Step 4: Implement `types.ts`, `grid.ts`, `validate.ts` and `emoji.ts`.**
@@ -115,19 +115,19 @@ Expected: FAIL (modules missing).
 
 - [ ] **Step 5: Run the tests to verify they pass**
 
-Run: `npm --prefix frontend test && npm --prefix frontend run typecheck`
+Run: `npm --prefix custom_components/ha_controller/frontend test && npm --prefix custom_components/ha_controller/frontend run typecheck`
 Expected: PASS.
 
 - [ ] **Step 6: Add the CI job.** Add job `frontend` to `.github/workflows/ci.yml`:
-  - `actions/setup-node@v4` with `node-version: 24`, `cache: npm`, `cache-dependency-path: frontend/package-lock.json`.
-  - Working directory `frontend`: `npm ci`, `npm test`, `npm run build`.
+  - `actions/setup-node@v4` with `node-version: 24`, `cache: npm`, `cache-dependency-path: custom_components/ha_controller/frontend/package-lock.json`.
+  - Working directory `custom_components/ha_controller/frontend`: `npm ci`, `npm test`, `npm run build`.
 
-  Add the `npm --prefix frontend …` commands to `CLAUDE.md`.
+  Add the `npm --prefix custom_components/ha_controller/frontend …` commands to `.claude/CLAUDE.md`.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add frontend .github/workflows/ci.yml CLAUDE.md
+git add custom_components/ha_controller/frontend .github/workflows/ci.yml .claude/CLAUDE.md
 git commit -m "feat(panel): add panel tooling, grid model and validation"
 ```
 
@@ -136,7 +136,7 @@ git commit -m "feat(panel): add panel tooling, grid model and validation"
 ### Task 2: Edit operations, colours and emoji
 
 **Files:**
-- Create: `frontend/src/model/edit.ts`, `frontend/src/model/color.ts`, `frontend/test/edit.test.ts`, `frontend/test/color.test.ts`, `frontend/test/emoji.test.ts`
+- Create: `custom_components/ha_controller/frontend/src/model/edit.ts`, `custom_components/ha_controller/frontend/src/model/color.ts`, `custom_components/ha_controller/frontend/test/edit.test.ts`, `custom_components/ha_controller/frontend/test/color.test.ts`, `custom_components/ha_controller/frontend/test/emoji.test.ts`
 
 **Interfaces:**
 - Consumes: `canDelete` (Task 1).
@@ -172,20 +172,20 @@ expect(SUPPORTED_EMOJI).toHaveLength(64); expect(normalizeEmoji("❄️")).toBe(
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `npm --prefix frontend test`
+Run: `npm --prefix custom_components/ha_controller/frontend test`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `edit.ts` and `color.ts`.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `npm --prefix frontend test`
+Run: `npm --prefix custom_components/ha_controller/frontend test`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add frontend/src/model frontend/test
+git add custom_components/ha_controller/frontend/src/model custom_components/ha_controller/frontend/test
 git commit -m "feat(panel): add pure layout edit operations"
 ```
 
@@ -194,7 +194,7 @@ git commit -m "feat(panel): add pure layout edit operations"
 ### Task 3: Block map component (`hc-grid`)
 
 **Files:**
-- Create: `frontend/src/components/hc-grid.ts`, `frontend/test/hc-grid.test.ts`
+- Create: `custom_components/ha_controller/frontend/src/components/hc-grid.ts`, `custom_components/ha_controller/frontend/test/hc-grid.test.ts`
 
 **Interfaces:**
 - Consumes: `placeholders`, `gridBounds` and `textColorFor`.
@@ -223,20 +223,20 @@ expect(one(el, '.block[data-id="b3"]')!.style.gridColumn).toBe("2"); expect(one(
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `npm --prefix frontend test`
+Run: `npm --prefix custom_components/ha_controller/frontend test`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `hc-grid.ts`.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `npm --prefix frontend test`
+Run: `npm --prefix custom_components/ha_controller/frontend test`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add frontend/src/components/hc-grid.ts frontend/test/hc-grid.test.ts
+git add custom_components/ha_controller/frontend/src/components/hc-grid.ts custom_components/ha_controller/frontend/test/hc-grid.test.ts
 git commit -m "feat(panel): render the block map"
 ```
 
@@ -246,9 +246,9 @@ git commit -m "feat(panel): render the block map"
 
 **Files:**
 - Create:
-  - `frontend/src/messages.ts`
-  - `frontend/src/components/`: `hc-block-editor.ts`, `hc-item-editor.ts`, `hc-entity-input.ts`, `hc-emoji-picker.ts`, `hc-preview.ts`
-  - `frontend/test/hc-block-editor.test.ts`, `frontend/test/hc-item-editor.test.ts`
+  - `custom_components/ha_controller/frontend/src/messages.ts`
+  - `custom_components/ha_controller/frontend/src/components/`: `hc-block-editor.ts`, `hc-item-editor.ts`, `hc-entity-input.ts`, `hc-emoji-picker.ts`, `hc-preview.ts`
+  - `custom_components/ha_controller/frontend/test/hc-block-editor.test.ts`, `custom_components/ha_controller/frontend/test/hc-item-editor.test.ts`
 
 **Interfaces:**
 - Consumes: the Task 2 edit operations and `canDelete`.
@@ -319,20 +319,20 @@ expect(all(picker, "button.emoji")).toHaveLength(64);
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `npm --prefix frontend test`
+Run: `npm --prefix custom_components/ha_controller/frontend test`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement the five components and `messages.ts`.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `npm --prefix frontend test && npm --prefix frontend run typecheck`
+Run: `npm --prefix custom_components/ha_controller/frontend test && npm --prefix custom_components/ha_controller/frontend run typecheck`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
 
 ```bash
-git add frontend/src frontend/test
+git add custom_components/ha_controller/frontend/src custom_components/ha_controller/frontend/test
 git commit -m "feat(panel): add block and item editors"
 ```
 
@@ -342,11 +342,11 @@ git commit -m "feat(panel): add block and item editors"
 
 **Files:**
 - Create:
-  - `frontend/src/ha-controller-panel.ts`, `frontend/src/api.ts`
-  - `frontend/dev/index.html`, `frontend/dev/mock-hass.ts`
-  - `frontend/test/panel.test.ts`
+  - `custom_components/ha_controller/frontend/src/ha-controller-panel.ts`, `custom_components/ha_controller/frontend/src/api.ts`
+  - `custom_components/ha_controller/frontend/dev/index.html`, `custom_components/ha_controller/frontend/dev/mock-hass.ts`
+  - `custom_components/ha_controller/frontend/test/panel.test.ts`
   - `docs/configuration.md`
-- Modify: `docs/README.md`, `docs/development.md` ("Panel" section), `CLAUDE.md`
+- Modify: `docs/README.md`, `docs/development.md` ("Panel" section), `.claude/CLAUDE.md`
 
 **Interfaces:**
 - Consumes: plan 2's websocket commands `ha_controller/screens`, `ha_controller/layout/get` and `ha_controller/layout/save`; Tasks 1–4.
@@ -394,17 +394,17 @@ test("status line reports update available", ...)                         // fir
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `npm --prefix frontend test`
+Run: `npm --prefix custom_components/ha_controller/frontend test`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `api.ts`, `ha-controller-panel.ts` (with `customElements.define` guarded against double definition), `dev/mock-hass.ts` and `dev/index.html`.**
 
 - [ ] **Step 4: Run the tests and the build**
 
-Run: `npm --prefix frontend test && npm --prefix frontend run build && test -f custom_components/ha_controller/frontend/ha-controller-panel.js`
+Run: `npm --prefix custom_components/ha_controller/frontend test && npm --prefix custom_components/ha_controller/frontend run build && test -f custom_components/ha_controller/frontend/dist/ha-controller-panel.js`
 Expected: PASS, and the bundle exists.
 
-- [ ] **Step 5: Manual check.** Run `npm --prefix frontend run dev`. Expected:
+- [ ] **Step 5: Manual check.** Run `npm --prefix custom_components/ha_controller/frontend run dev`. Expected:
   - the reference map looks like the screenshot, with 4 blocks and 8 "+";
   - clicking "+" right of Kitchen adds "Block 5";
   - deleting Hello World is refused with "Other blocks would become unreachable.";
@@ -428,6 +428,6 @@ Expected: PASS, and the bundle exists.
 - [ ] **Step 7: Commit**
 
 ```bash
-git add frontend docs CLAUDE.md
+git add custom_components/ha_controller/frontend docs .claude/CLAUDE.md
 git commit -m "feat(panel): add panel root with save, status and dev harness"
 ```
