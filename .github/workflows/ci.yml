@@ -16,3 +16,14 @@ jobs:
       - run: pip install -r .github/scripts/requirements.txt
       - run: ruff check .github/scripts
       - run: pytest .github/scripts/tests
+
+  integration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - run: pip install -r custom_components/requirements_test.txt
+      - run: ruff check custom_components
+      - run: pytest custom_components/ha_controller/tests

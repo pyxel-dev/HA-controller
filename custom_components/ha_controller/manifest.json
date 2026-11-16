@@ -1,0 +1,14 @@
+{
+  "domain": "ha_controller",
+  "name": "HA Controller",
+  "after_dependencies": ["esphome"],
+  "codeowners": ["@pyxel-dev"],
+  "config_flow": true,
+  "dependencies": ["frontend", "http", "panel_custom", "websocket_api"],
+  "documentation": "https://github.com/pyxel-dev/HA-controller/tree/main/docs",
+  "integration_type": "device",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/pyxel-dev/HA-controller/issues",
+  "requirements": [],
+  "version": "0.1.0"
+}

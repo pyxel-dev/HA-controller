@@ -34,6 +34,13 @@ python3.14 -m venv .github/scripts/.venv
 .github/scripts/.venv/bin/pip install -r .github/scripts/requirements.txt
 .github/scripts/.venv/bin/pytest .github/scripts/tests
 .github/scripts/.venv/bin/ruff check .github/scripts
+.github/scripts/.venv/bin/python .github/scripts/make_brand_icon.py   # regenerate brand icons
+
+# Integration (own venv, run from the repository root)
+python3.14 -m venv custom_components/.venv
+custom_components/.venv/bin/pip install -r custom_components/requirements_test.txt
+custom_components/.venv/bin/pytest custom_components/ha_controller/tests
+custom_components/.venv/bin/ruff check custom_components
 ```
 
 ## Skills and agents
