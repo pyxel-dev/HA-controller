@@ -9,6 +9,7 @@ from homeassistant.loader import async_get_integration
 from .const import DOMAIN
 from .controller import ScreenController
 from .layout import async_load_emoji
+from .panel import async_register_panel, async_unregister_panel
 from .store import LayoutStore
 from .websocket import async_register_websocket
 
@@ -35,12 +36,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: HaControllerConfigEntry)
     )
     await controller.async_start()
     entry.runtime_data = controller
+    await async_register_panel(hass, controller.integration_version)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HaControllerConfigEntry) -> bool:
     """Unload one screen."""
     await entry.runtime_data.async_stop()
+    others = [
+        other
+        for other in hass.config_entries.async_loaded_entries(DOMAIN)
+        if other.entry_id != entry.entry_id
+    ]
+    if not others:
+        async_unregister_panel(hass)
     return True
 
 

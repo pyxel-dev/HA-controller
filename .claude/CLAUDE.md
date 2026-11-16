@@ -47,3 +47,4 @@ custom_components/.venv/bin/ruff check custom_components
 
 - Skill `protocol-change` (`.claude/skills/protocol-change/`): checklist for any change that crosses the Home Assistant ↔ screen boundary.
 - Agent `protocol-guardian` (`.claude/agents/protocol-guardian.md`): reviews a diff for protocol consistency across docs, fixtures, Python, TypeScript and C++.
+- Agent `ha-integration-reviewer` (`.claude/agents/ha-integration-reviewer.md`): reviews integration changes against Home Assistant development rules.
