@@ -41,6 +41,12 @@ python3.14 -m venv custom_components/.venv
 custom_components/.venv/bin/pip install -r custom_components/requirements_test.txt
 custom_components/.venv/bin/pytest custom_components/ha_controller/tests
 custom_components/.venv/bin/ruff check custom_components
+
+# Panel (Node 24, run from the repository root)
+npm --prefix custom_components/ha_controller/frontend ci
+npm --prefix custom_components/ha_controller/frontend test
+npm --prefix custom_components/ha_controller/frontend run typecheck
+npm --prefix custom_components/ha_controller/frontend run build
 ```
 
 ## Skills and agents
