@@ -8,10 +8,9 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .const import STATE_CHUNK_BYTES
+from .const import MAX_TEXT_LEN, STATE_CHUNK_BYTES
 
 MISSING_TEXT = "—"
-MAX_TEXT_LENGTH = 64
 _UNUSABLE = (STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
@@ -34,7 +33,7 @@ def format_entity_text(hass: HomeAssistant, entity_id: str, attribute: str | Non
     if attribute:
         if attribute not in state.attributes:
             return MISSING_TEXT
-        return str(state.attributes[attribute])[:MAX_TEXT_LENGTH]
+        return str(state.attributes[attribute])[:MAX_TEXT_LEN]
     text = state.state
     precision = _precision(hass, entity_id)
     if precision is not None:
@@ -45,7 +44,7 @@ def format_entity_text(hass: HomeAssistant, entity_id: str, attribute: str | Non
     unit = state.attributes.get("unit_of_measurement")
     if unit:
         text = f"{text} {unit}"
-    return text[:MAX_TEXT_LENGTH]
+    return text[:MAX_TEXT_LEN]
 
 
 def _light_update(block_id: str, state: Any) -> dict[str, Any]:

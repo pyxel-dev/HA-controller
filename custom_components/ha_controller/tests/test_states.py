@@ -4,7 +4,7 @@ import json
 
 import pytest
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import METRIC_SYSTEM
+from homeassistant.util.unit_system import METRIC_SYSTEM, US_CUSTOMARY_SYSTEM
 
 from custom_components.ha_controller.const import STATE_CHUNK_BYTES
 from custom_components.ha_controller.states import (
@@ -63,3 +63,39 @@ def test_chunk_updates_keeps_oversize_update_alone():
     small = {"id": "i2", "text": "y"}
     chunks = chunk_updates([small, big, small], 100)
     assert [json.loads(c) for c in chunks] == [[small], [big], [small]]
+
+
+async def test_climate_fahrenheit_defaults(hass):
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    hass.states.async_set(
+        "climate.bedroom",
+        "heat",
+        {"temperature": 70, "current_temperature": 68, "min_temp": 45, "max_temp": 95},
+    )
+    updates = build_updates(hass, load_layout("reference"), ["climate.bedroom"])
+    assert updates == [
+        {
+            "id": "b4",
+            "available": True,
+            "target": 70,
+            "min": 45,
+            "max": 95,
+            "step": 1,
+            "unit": "°F",
+            "current": "68 °F",
+            "action": "Heat",
+        }
+    ]
+
+
+async def test_entity_text_uses_suggested_precision(hass):
+    registry = er.async_get(hass)
+    registry.async_get_or_create(
+        "sensor", "test", "outdoor_temperature", suggested_object_id="outdoor_temperature"
+    )
+    registry.async_update_entity_options(
+        "sensor.outdoor_temperature", "sensor", {"suggested_display_precision": 2}
+    )
+    hass.states.async_set("sensor.outdoor_temperature", "3.14159", {"unit_of_measurement": "kW"})
+    updates = build_updates(hass, load_layout("reference"), ["sensor.outdoor_temperature"])
+    assert [u for u in updates if u["id"] == "i3"] == [{"id": "i3", "text": "3.14 kW"}]
