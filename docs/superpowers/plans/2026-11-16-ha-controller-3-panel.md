@@ -66,7 +66,7 @@
     - `reachable(blocks: Block[], start: string | null): Set<string>`
     - `canDelete(layout, id): {ok: true} | {ok: false, reason: "start" | "disconnects"}`
     - `gridBounds(cells: Cell[]): {minX, maxX, minY, maxY}`
-  - **`model/validate.ts`:** `validateLayout(layout: unknown, emoji: ReadonlySet<string>): LayoutError[]`. Same phases and order as plan 2 Task 2.
+  - **`model/validate.ts`:** `validateLayout(layout: unknown, emoji: ReadonlySet<string>): LayoutError[]`. Same phases and order as plan 2 Task 2. Lengths count code points (`Array.from(text).length`, never `.length`), and names use `trim()`.
   - **`model/emoji.ts`:** `SUPPORTED_EMOJI: readonly string[]` imported from `../../../emoji.json` (relative to `src/model/`), `EMOJI_SET`, `normalizeEmoji(text): string`.
   - **`test/fixtures.ts`:** `validLayouts`, `invalidLayouts` and `colors`, loaded with `import.meta.glob("../../../../docs/protocol/fixtures/…", {eager: true, import: "default"})`.
 

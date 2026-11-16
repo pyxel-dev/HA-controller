@@ -232,6 +232,8 @@ Validation returns a list of `{code, ref}`, where `ref` is the offending block o
 | `unsupported_emoji` | Emoji item: after removing U+FE0F, the value is an entry of `emoji.json` |
 | `payload_too_large` | The compiled payload (§7.3) is larger than 24 576 UTF-8 bytes. Checked by the integration only. |
 
+Lengths count Unicode code points (Python `len`, JavaScript `Array.from(text).length`), and names are trimmed of Unicode whitespace (`str.strip()`, `String.prototype.trim()`). The fixtures `astral-text` (valid) and `invalid_name-astral` pin this.
+
 Entities that do not exist (yet) are valid; the screen shows them as unavailable.
 
 ## 7. Device protocol v1 (normative)
