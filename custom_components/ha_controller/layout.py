@@ -104,9 +104,13 @@ def _check_structure(layout: Any) -> bool:
     return True
 
 
+def _is_entity_id(value: Any) -> bool:
+    return isinstance(value, str) and _ENTITY_RE.fullmatch(value) is not None
+
+
 def _valid_entity_item(item: dict[str, Any]) -> bool:
     entity_id = item.get("entity_id")
-    if not isinstance(entity_id, str) or _ENTITY_RE.fullmatch(entity_id) is None:
+    if not _is_entity_id(entity_id):
         return False
     attribute = item.get("attribute")
     return attribute is None or (
@@ -116,7 +120,7 @@ def _valid_entity_item(item: dict[str, Any]) -> bool:
 
 def _valid_entity_block(block: dict[str, Any]) -> bool:
     entity_id = block.get("entity_id")
-    if not isinstance(entity_id, str) or _ENTITY_RE.fullmatch(entity_id) is None:
+    if not _is_entity_id(entity_id):
         return False
     return entity_id.split(".", 1)[0] in ENTITY_BLOCK_DOMAINS
 

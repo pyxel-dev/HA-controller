@@ -30,9 +30,39 @@ def reference() -> dict[str, Any]:
     return copy.deepcopy(load_fixture("layouts", "valid", "reference.json"))
 
 
+SPEC_ERROR_CODES = frozenset(
+    {
+        "invalid_structure",
+        "too_many_blocks",
+        "invalid_sleep_timeout",
+        "invalid_id",
+        "duplicate_id",
+        "coordinate_out_of_range",
+        "duplicate_position",
+        "invalid_start",
+        "disconnected",
+        "invalid_name",
+        "invalid_background",
+        "invalid_font_size",
+        "invalid_type",
+        "invalid_entity",
+        "too_many_items",
+        "invalid_item",
+        "invalid_text",
+        "unsupported_emoji",
+    }
+)
+
+
 def test_fixture_sets_are_complete() -> None:
-    assert len(VALID_LAYOUTS) == 4
-    assert len(INVALID_LAYOUTS) == 23
+    assert VALID_LAYOUTS
+    assert INVALID_LAYOUTS
+    covered = {
+        json.loads(path.read_text(encoding="utf-8"))["expect"]["code"]
+        for path in INVALID_LAYOUTS
+    }
+    missing = sorted(SPEC_ERROR_CODES - covered)
+    assert not missing, f"no invalid fixture for error codes: {missing}"
 
 
 @pytest.mark.parametrize("path", VALID_LAYOUTS, ids=lambda p: p.stem)
@@ -102,8 +132,9 @@ def test_empty_layout_is_valid() -> None:
 
 
 def test_load_emoji_file() -> None:
+    with EMOJI_FILE.open(encoding="utf-8") as handle:
+        assert EMOJI == frozenset(json.load(handle))
     assert "💡" in EMOJI
-    assert len(EMOJI) == 64
 
 
 async def test_async_load_emoji(hass) -> None:
