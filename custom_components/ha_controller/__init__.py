@@ -10,6 +10,7 @@ from .const import DOMAIN
 from .controller import ScreenController
 from .layout import async_load_emoji
 from .store import LayoutStore
+from .websocket import async_register_websocket
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -18,6 +19,7 @@ type HaControllerConfigEntry = ConfigEntry[ScreenController]
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the integration."""
+    async_register_websocket(hass)
     return True
 
 
