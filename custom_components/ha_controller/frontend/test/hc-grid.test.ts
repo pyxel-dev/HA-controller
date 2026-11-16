@@ -1,12 +1,11 @@
 import {html} from "lit";
 import {afterEach, describe, expect, it} from "vitest";
 import "../src/components/hc-grid";
-import {all, mount, nextEvent, one} from "./dom";
+import {all, cleanup, mount, nextEvent, one} from "./dom";
+import {defineElement} from "../src/define";
 import {validLayouts} from "./fixtures";
 
-afterEach(() => {
-  document.body.innerHTML = "";
-});
+afterEach(cleanup);
 
 const reference = () =>
   mount(html`<hc-grid .layout=${validLayouts.reference} .selectedId=${null} .errorRefs=${new Set(["b4"])}></hc-grid>`);
@@ -17,6 +16,10 @@ describe("hc-grid", () => {
     expect(all(el, ".block")).toHaveLength(4);
     expect(all(el, ".placeholder")).toHaveLength(8);
     expect(one(el, '.block[data-id="b1"] .start-badge')?.textContent).toBe("start");
+    expect(all(el, ".start-badge")).toHaveLength(1);
+    expect(one(el, '.block[data-id="b1"]')!.classList.contains("start")).toBe(true);
+    expect(one(el, '.block[data-id="b1"] .start-badge')).not.toBeNull();
+    expect(all(el, ".block.start")).toHaveLength(1);
     expect(one(el, '.block[data-id="b4"]')!.classList.contains("has-error")).toBe(true);
     expect(one(el, '.block[data-id="b1"]')!.classList.contains("has-error")).toBe(false);
   });
@@ -54,5 +57,30 @@ describe("hc-grid", () => {
     const event = await selected;
     expect(event.detail).toEqual({id: "b3"});
     expect(event.bubbles && event.composed).toBe(true);
+  });
+
+  it("can show selected and has-error on the same block", async () => {
+    const el = await mount(html`<hc-grid .layout=${validLayouts.reference} .selectedId=${"b4"} .errorRefs=${new Set(["b4"])}></hc-grid>`);
+    const node = one(el, '.block[data-id="b4"]')!;
+    expect(node.classList.contains("selected") && node.classList.contains("has-error")).toBe(true);
+  });
+
+  it("renders a single origin placeholder for an empty layout", async () => {
+    const empty = {version: 1 as const, start: null, settings: {sleep_timeout: 0}, blocks: []};
+    const el = await mount(html`<hc-grid .layout=${empty}></hc-grid>`);
+    const ph = all(el, ".placeholder");
+    expect(ph).toHaveLength(1);
+    expect(ph[0].dataset.x).toBe("0");
+    expect(ph[0].dataset.y).toBe("0");
+  });
+});
+
+describe("defineElement", () => {
+  it("does not throw when the same name is defined twice", () => {
+    class Dummy extends HTMLElement {}
+    expect(() => {
+      defineElement("hc-define-test", Dummy);
+      defineElement("hc-define-test", Dummy);
+    }).not.toThrow();
   });
 });

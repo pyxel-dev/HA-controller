@@ -21,3 +21,7 @@ export function one<E extends Element = HTMLElement>(el: Element, selector: stri
 export function nextEvent<D = unknown>(el: EventTarget, name: string): Promise<CustomEvent<D>> {
   return new Promise((resolve) => el.addEventListener(name, (e) => resolve(e as CustomEvent<D>), {once: true}));
 }
+
+export function cleanup(): void {
+  document.body.innerHTML = "";
+}

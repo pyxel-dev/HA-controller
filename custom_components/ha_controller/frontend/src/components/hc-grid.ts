@@ -1,11 +1,11 @@
 import {LitElement, css, html, nothing} from "lit";
-import {customElement, property} from "lit/decorators.js";
+import {property} from "lit/decorators.js";
+import {defineElement} from "../define";
 import {gridBounds, placeholders} from "../model/grid";
 import {textColorFor} from "../model/color";
 import type {Layout} from "../types";
 
 /** Block map: x grows to the right, y grows downwards, like navigation on the screen. */
-@customElement("hc-grid")
 export class HcGrid extends LitElement {
   @property({attribute: false}) layout: Layout = {version: 1, start: null, settings: {sleep_timeout: 0}, blocks: []};
   @property({attribute: false}) selectedId: string | null = null;
@@ -40,20 +40,34 @@ export class HcGrid extends LitElement {
       overflow: hidden;
       overflow-wrap: anywhere;
     }
-    button:focus-visible {
-      box-shadow: 0 0 0 3px var(--primary-color, #03a9f4);
+    /* Cues are layered box-shadows (start inset, selection, error), so they combine. Focus uses
+       outline, which no state touches, and sits outside the rings. */
+    .block {
+      --ring-start: 0 0 0 0 transparent;
+      --ring-select: 0 0 0 0 transparent;
+      --ring-error: 0 0 0 0 transparent;
+      box-shadow: var(--ring-select), var(--ring-error), var(--ring-start);
     }
     .block.start {
-      outline: 3px solid var(--primary-text-color, #212121);
-      outline-offset: -3px;
-    }
-    .block.selected {
-      box-shadow: 0 0 0 3px var(--card-background-color, #fff), 0 0 0 6px var(--primary-color, #03a9f4);
-      overflow: visible;
+      --ring-start: inset 0 0 0 3px var(--primary-text-color, #212121);
     }
     .block.has-error {
-      box-shadow: 0 0 0 3px var(--card-background-color, #fff), 0 0 0 6px var(--error-color, #db4437);
-      overflow: visible;
+      --ring-error: 0 0 0 3px var(--error-color, #db4437);
+    }
+    .block.selected {
+      --ring-select: 0 0 0 3px var(--primary-color, #03a9f4);
+    }
+    .block.selected.has-error {
+      --ring-select: 0 0 0 3px var(--primary-color, #03a9f4);
+      --ring-error: 0 0 0 6px var(--error-color, #db4437);
+    }
+    button:focus-visible {
+      outline: 2px solid var(--primary-text-color, #212121);
+      outline-offset: 3px;
+    }
+    .block.selected:focus-visible,
+    .block.has-error:focus-visible {
+      outline-offset: 8px;
     }
     .start-badge {
       position: absolute;
@@ -111,6 +125,8 @@ export class HcGrid extends LitElement {
     this.dispatchEvent(new CustomEvent(name, {detail, bubbles: true, composed: true}));
   }
 }
+
+defineElement("hc-grid", HcGrid);
 
 declare global {
   interface HTMLElementTagNameMap {
