@@ -1,7 +1,7 @@
 """Per-screen controller: owns the layout and keeps the screen in sync."""
 
 import logging
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Any
@@ -18,6 +18,7 @@ from .const import (
     ACTION_SET_LAYOUT,
     ACTION_SET_STATES,
     CONF_DEVICE_ID,
+    EVENT_CONTROL,
     EVENT_HELLO,
     MAX_PAYLOAD_BYTES,
     ONLINE_TIMEOUT,
@@ -25,6 +26,7 @@ from .const import (
     PUSH_RETRY,
     STATE_COALESCE_SECONDS,
 )
+from .controls import resolve_control
 from .layout import LayoutError, bound_entities, empty_layout, validate_layout
 from .states import build_updates, chunk_updates
 from .store import LayoutStore
@@ -92,6 +94,7 @@ class ScreenController:
         self._last_push: tuple[str, datetime] | None = None
         self._listeners: list[CALLBACK_TYPE] = []
         self._unsub_hello: CALLBACK_TYPE | None = None
+        self._unsub_control: CALLBACK_TYPE | None = None
         self._unsub_states: CALLBACK_TYPE | None = None
         self._cancel_flush: CALLBACK_TYPE | None = None
         self._pending: set[str] = set()
@@ -140,12 +143,18 @@ class ScreenController:
         self._unsub_hello = self.hass.bus.async_listen(
             EVENT_HELLO, self._async_hello_event, event_filter=_is_ours
         )
+        self._unsub_control = self.hass.bus.async_listen(
+            EVENT_CONTROL, self._async_control_event, event_filter=_is_ours
+        )
 
     async def async_stop(self) -> None:
         """Cancel every subscription and pending timer."""
         if self._unsub_hello is not None:
             self._unsub_hello()
             self._unsub_hello = None
+        if self._unsub_control is not None:
+            self._unsub_control()
+            self._unsub_control = None
         self._untrack_entities()
         if self._cancel_flush is not None:
             self._cancel_flush()
@@ -246,6 +255,19 @@ class ScreenController:
 
     async def _async_hello_event(self, event: Event) -> None:
         await self.async_handle_hello(event.data)
+
+    async def _async_control_event(self, event: Event) -> None:
+        await self.async_handle_control(event.data)
+
+    async def async_handle_control(self, data: Mapping[str, Any]) -> None:
+        """Run the service call a control event maps to (spec §7.6)."""
+        call = resolve_control(self._layout, self.hass, data)
+        if call is None:
+            return
+        try:
+            await self.hass.services.async_call(call.domain, call.service, call.data, blocking=True)
+        except (HomeAssistantError, vol.Invalid) as err:
+            _LOGGER.warning("Calling %s.%s failed: %s", call.domain, call.service, err)
 
     def _recently_pushed(self) -> bool:
         if self._last_push is None:
