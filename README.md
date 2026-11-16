@@ -1,9 +1,20 @@
 # HA Controller
-An ESP-32 remote control with a 1.75-inch AMOLED display
+
+HA Controller turns the Waveshare ESP32-S3-Touch-AMOLED-1.75, a round AMOLED touch screen, into a Home Assistant remote. A custom integration with a sidebar panel lets you design what the screen shows, and an ESPHome firmware renders it.
+
+- Block map editor in Home Assistant
+- Edge-swipe navigation between blocks
+- Light and thermostat knobs
+- Custom blocks
+- Automatic firmware updates
+
+Status: under active development.
+
+See the [documentation](docs/README.md).
 
 ## 3D models
 
-You can find two 3D models with or without power button, into [3D Models](3D_models) folder. Each models is in STL or 3MF.
+You can find two 3D models, with or without power button, in the [3D_models](3D_models) folder. Each model is available as STL or 3MF.
 
 <p align="center">
   <img src="files/3D_models/with_pwr.png" width="49%" />
