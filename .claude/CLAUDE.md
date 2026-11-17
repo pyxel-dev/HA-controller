@@ -6,7 +6,7 @@ It is a custom integration with a sidebar panel, an ESPHome firmware and a GitHu
 ## Rules
 
 - English only: code, comments, docs and commit messages.
-- One version for the whole repository. Change it only with `python .github/scripts/versioning.py bump X.Y.Z` (added in plan 5).
+- One version for the whole repository. Change it only with `python .github/scripts/versioning.py bump X.Y.Z`; `python .github/scripts/versioning.py check [--tag vX.Y.Z]` verifies it (CI job `versions`).
 - The protocol is defined in `docs/protocol/README.md` and pinned by `docs/protocol/fixtures/`.
 - The repository root holds no files except README.md, hacs.json and .gitignore. Put every new file in the folder that owns it (see the repository map).
 - TDD: write the failing test first, then the code.
@@ -35,6 +35,7 @@ python3.14 -m venv .github/scripts/.venv
 .github/scripts/.venv/bin/pytest .github/scripts/tests
 .github/scripts/.venv/bin/ruff check .github/scripts
 .github/scripts/.venv/bin/python .github/scripts/make_brand_icon.py   # regenerate brand icons
+.github/scripts/.venv/bin/python .github/scripts/versioning.py check   # verify the single repository version
 
 # Integration (own venv, run from the repository root)
 python3.14 -m venv custom_components/.venv
