@@ -25,5 +25,6 @@ Dry runs use `workflow_dispatch` (only the `build` job runs).
 
 ## Rules
 
+- The `github-pages` environment must allow tags `v*` (see the one-time setup in `docs/releasing.md`), or the `pages` job fails on tag runs.
 - OTA URLs must stay stable (`firmware/<v>/ha-controller.ota.bin`), because integrations already installed depend on them.
 - After any script change, run `.github/scripts/.venv/bin/pytest .github/scripts/tests`.

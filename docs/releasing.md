@@ -3,6 +3,7 @@
 ## One-time setup
 
 - Settings > Pages > Source: "GitHub Actions".
+- Settings > Environments > `github-pages` > Deployment branches and tags: add a tag rule `v*`. By default the environment only accepts the default branch, so the `pages` job of a tag run would be rejected.
 - Set the repository description and topics, which HACS requires.
 
 ## Steps
