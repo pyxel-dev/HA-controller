@@ -1,0 +1,64 @@
+"""The HA Controller integration."""
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.loader import async_get_integration
+
+from .const import DOMAIN
+from .controller import ScreenController
+from .layout import async_load_emoji
+from .panel import async_register_panel, async_unregister_panel
+from .store import LayoutStore
+from .websocket import async_register_websocket
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS = [Platform.UPDATE]
+
+type HaControllerConfigEntry = ConfigEntry[ScreenController]
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the integration."""
+    async_register_websocket(hass)
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: HaControllerConfigEntry) -> bool:
+    """Set up one screen."""
+    integration = await async_get_integration(hass, DOMAIN)
+    controller = ScreenController(
+        hass,
+        entry,
+        LayoutStore(hass, entry.entry_id),
+        await async_load_emoji(hass),
+        str(integration.version),
+    )
+    await controller.async_start()
+    entry.runtime_data = controller
+    await async_register_panel(hass, controller.integration_version)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: HaControllerConfigEntry) -> bool:
+    """Unload one screen."""
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
+    await entry.runtime_data.async_stop()
+    others = [
+        other
+        for other in hass.config_entries.async_loaded_entries(DOMAIN)
+        if other.entry_id != entry.entry_id
+    ]
+    if not others:
+        async_unregister_panel(hass)
+    return True
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: HaControllerConfigEntry) -> None:
+    """Delete the stored layout of a removed screen."""
+    await LayoutStore(hass, entry.entry_id).async_remove()

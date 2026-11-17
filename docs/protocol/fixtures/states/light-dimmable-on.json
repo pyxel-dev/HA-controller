@@ -1,0 +1,26 @@
+{
+  "layout": "reference",
+  "unit": "°C",
+  "entity_ids": [
+    "light.kitchen"
+  ],
+  "hass_states": {
+    "light.kitchen": {
+      "state": "on",
+      "attributes": {
+        "brightness": 128,
+        "supported_color_modes": [
+          "brightness"
+        ]
+      }
+    }
+  },
+  "updates": [
+    {
+      "id": "b1",
+      "available": true,
+      "on": true,
+      "brightness": 50
+    }
+  ]
+}

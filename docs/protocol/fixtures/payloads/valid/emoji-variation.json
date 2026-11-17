@@ -1,0 +1,28 @@
+{
+  "layout": "emoji-variation",
+  "payload": {
+    "v": 1,
+    "rev": "5387d4ea",
+    "start": "b1",
+    "sleep": 3600,
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 0,
+        "y": 0,
+        "name": "Snow",
+        "bg": "FFFFFF",
+        "font": "xl",
+        "widget": "custom",
+        "items": [
+          {
+            "id": "i1",
+            "kind": "emoji",
+            "text": "❄",
+            "font": "xl"
+          }
+        ]
+      }
+    ]
+  }
+}

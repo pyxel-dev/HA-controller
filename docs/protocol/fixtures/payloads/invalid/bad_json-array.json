@@ -1,0 +1,4 @@
+{
+  "expect": "bad_json",
+  "text": "[1,2]"
+}

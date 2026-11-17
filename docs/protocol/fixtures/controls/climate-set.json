@@ -1,0 +1,26 @@
+{
+  "layout": "reference",
+  "hass_states": {
+    "climate.bedroom": {
+      "state": "heat",
+      "attributes": {
+        "min_temp": 7,
+        "max_temp": 35
+      }
+    }
+  },
+  "event": {
+    "block": "b4",
+    "item": "",
+    "op": "set",
+    "value": "21.50"
+  },
+  "expect_call": {
+    "domain": "climate",
+    "service": "set_temperature",
+    "data": {
+      "entity_id": "climate.bedroom",
+      "temperature": 21.5
+    }
+  }
+}

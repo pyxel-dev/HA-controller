@@ -1,0 +1,37 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Add an HA Controller screen",
+        "description": "Pick the screen. It must already be added to Home Assistant with the ESPHome integration.",
+        "data": {
+          "device_id": "Screen"
+        }
+      }
+    },
+    "error": {
+      "not_ha_controller": "This device is not an HA Controller screen."
+    },
+    "abort": {
+      "already_configured": "This screen is already set up."
+    }
+  },
+  "entity": {
+    "update": {
+      "firmware": {
+        "name": "HA Controller firmware"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HA Controller options",
+        "description": "Installs the firmware that matches this integration's version whenever the screen reports a different one.",
+        "data": {
+          "auto_update": "Update the screen firmware automatically"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,126 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: release
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      # Both versions are installed. The last one listed (3.14) is the default `python`
+      # and runs the repository scripts; ESPHome runs in a 3.13 venv.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: |
+            3.13
+            3.14
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: custom_components/ha_controller/frontend/package-lock.json
+      - name: Read the version
+        id: version
+        run: |
+          version=$(python -c "import json; print(json.load(open('custom_components/ha_controller/manifest.json'))['version'])")
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - name: Check the repository version
+        run: python .github/scripts/versioning.py check
+      - name: Check the tag matches the version
+        if: github.ref_type == 'tag'
+        run: python .github/scripts/versioning.py check --tag "$GITHUB_REF_NAME"
+      - name: Build the panel
+        run: |
+          npm --prefix custom_components/ha_controller/frontend ci
+          npm --prefix custom_components/ha_controller/frontend run build
+      - name: Package the integration
+        run: python .github/scripts/package_integration.py --out dist/ha_controller.zip
+      - name: Install ESPHome
+        run: |
+          python3.13 -m venv esphome/.venv
+          esphome/.venv/bin/pip install -r esphome/requirements.txt
+      - name: Compile the firmware
+        run: esphome/.venv/bin/esphome compile esphome/ha-controller.yaml
+      - name: Collect the firmware
+        run: >
+          python .github/scripts/collect_firmware.py
+          --build-dir esphome/.esphome/build/ha-controller/build
+          --version "${{ steps.version.outputs.version }}"
+          --out dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist
+
+  pages:
+    needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Add the firmware of this version
+        run: |
+          mkdir -p "releases/${{ needs.build.outputs.version }}"
+          cp dist/ha-controller-* "releases/${{ needs.build.outputs.version }}/"
+      - name: Download the firmware of every earlier release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          for tag in $(gh release list --limit 200 --json tagName -q '.[].tagName'); do
+            if [ "$tag" = "$GITHUB_REF_NAME" ]; then continue; fi
+            if ! gh release download "$tag" -p 'ha-controller-*' -D "releases/${tag#v}"; then
+              echo "No firmware downloaded for $tag, skipping it"
+              rm -rf "releases/${tag#v}"
+            fi
+          done
+      - name: Build the site
+        run: >
+          python .github/scripts/build_pages.py --web esphome/web --releases releases
+          --latest "${{ needs.build.outputs.version }}" --out site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  release:
+    needs: [build, pages]
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: >
+          gh release create "$GITHUB_REF_NAME" dist/*
+          --title "$GITHUB_REF_NAME" --generate-notes --verify-tag

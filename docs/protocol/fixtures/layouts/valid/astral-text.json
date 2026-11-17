@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "start": "b1",
+  "settings": {
+    "sleep_timeout": 20
+  },
+  "blocks": [
+    {
+      "id": "b1",
+      "x": 0,
+      "y": 0,
+      "name": "💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡💡",
+      "background": "#000000",
+      "font_size": "m",
+      "type": "custom",
+      "items": [
+        {
+          "id": "i1",
+          "kind": "text",
+          "text": "👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋👋",
+          "font_size": null
+        }
+      ]
+    }
+  ]
+}

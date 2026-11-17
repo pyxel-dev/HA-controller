@@ -1,0 +1,38 @@
+[
+  {
+    "bg": "#FFFFFF",
+    "text": "#000000"
+  },
+  {
+    "bg": "#000000",
+    "text": "#FFFFFF"
+  },
+  {
+    "bg": "#5B9E4D",
+    "text": "#FFFFFF"
+  },
+  {
+    "bg": "#4F86DD",
+    "text": "#FFFFFF"
+  },
+  {
+    "bg": "#C94F3D",
+    "text": "#FFFFFF"
+  },
+  {
+    "bg": "#7B2FA0",
+    "text": "#FFFFFF"
+  },
+  {
+    "bg": "#F1C40F",
+    "text": "#000000"
+  },
+  {
+    "bg": "#9E9E9E",
+    "text": "#000000"
+  },
+  {
+    "bg": "#8C8C8C",
+    "text": "#FFFFFF"
+  }
+]

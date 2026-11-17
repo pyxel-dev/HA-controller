@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "start": "b1",
+  "settings": {
+    "sleep_timeout": 3600
+  },
+  "blocks": [
+    {
+      "id": "b1",
+      "x": 0,
+      "y": 0,
+      "name": "Snow",
+      "background": "#FFFFFF",
+      "font_size": "xl",
+      "type": "custom",
+      "items": [
+        {
+          "id": "i1",
+          "kind": "emoji",
+          "emoji": "❄️",
+          "font_size": null
+        }
+      ]
+    }
+  ]
+}

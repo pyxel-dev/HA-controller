@@ -1,0 +1,18 @@
+{
+  "layout": "reference",
+  "hass_states": {},
+  "event": {
+    "block": "b1",
+    "item": "",
+    "op": "set",
+    "value": "42.40"
+  },
+  "expect_call": {
+    "domain": "light",
+    "service": "turn_on",
+    "data": {
+      "entity_id": "light.kitchen",
+      "brightness_pct": 42
+    }
+  }
+}

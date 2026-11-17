@@ -1,0 +1,66 @@
+packages:
+  version: !include version.yaml
+  ui: !include packages/ui.yaml
+
+esphome:
+  name: ha-controller-sim
+  friendly_name: HA Controller Simulator
+  project:
+    name: pyxel-dev.ha-controller
+    version: ${project_version}
+
+host:
+logger:
+api:
+
+external_components:
+  - source:
+      type: local
+      path: components
+
+display:
+  - platform: sdl
+    id: amoled
+    dimensions:
+      width: 466
+      height: 466
+    auto_clear_enabled: false
+    update_interval: never
+
+touchscreen:
+  - platform: sdl
+    id: touch
+    display: amoled
+
+sensor:
+  - platform: template
+    id: battery_level
+    name: Battery
+    update_interval: 5s
+    unit_of_measurement: "%"
+    lambda: return 76.0;
+
+binary_sensor:
+  - platform: template
+    id: battery_charging
+    name: Charging
+    lambda: return false;
+
+number:
+  - platform: template
+    id: screen_brightness
+    name: Screen brightness
+    unit_of_measurement: "%"
+    min_value: 5
+    max_value: 100
+    step: 1
+    initial_value: 80
+    optimistic: true
+
+script:
+  - id: screen_on
+    then:
+      - logger.log: screen_on
+  - id: screen_off
+    then:
+      - logger.log: screen_off

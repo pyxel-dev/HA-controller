@@ -1,0 +1,25 @@
+{
+  "layout": "reference",
+  "unit": "°C",
+  "entity_ids": [
+    "light.living_room"
+  ],
+  "hass_states": {
+    "light.living_room": {
+      "state": "off",
+      "attributes": {
+        "supported_color_modes": [
+          "color_temp"
+        ]
+      }
+    }
+  },
+  "updates": [
+    {
+      "id": "b2",
+      "available": true,
+      "on": false,
+      "brightness": 0
+    }
+  ]
+}

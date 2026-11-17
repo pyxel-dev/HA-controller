@@ -1,0 +1,25 @@
+{
+  "expect": {
+    "code": "coordinate_out_of_range",
+    "ref": "b1"
+  },
+  "layout": {
+    "version": 1,
+    "start": "b1",
+    "settings": {
+      "sleep_timeout": 0
+    },
+    "blocks": [
+      {
+        "id": "b1",
+        "x": 33,
+        "y": -2,
+        "name": "Solo",
+        "background": "#000000",
+        "font_size": "s",
+        "type": "custom",
+        "items": []
+      }
+    ]
+  }
+}

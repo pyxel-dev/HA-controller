@@ -1,0 +1,49 @@
+substitutions:
+  name: ha-controller
+  friendly_name: HA Controller
+
+packages:
+  version: !include version.yaml
+  board: !include packages/board-waveshare-amoled-175.yaml
+  ui: !include packages/ui.yaml
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  min_version: 2026.10.0
+  project:
+    name: pyxel-dev.ha-controller
+    version: ${project_version}
+
+logger:
+http_request:
+  verify_ssl: true
+api:
+  actions:
+    - action: install_firmware
+      variables: {url: string, md5_url: string}
+      then:
+        - lambda: |-
+            id(ui).show_message("Updating firmware…", "Do not unplug the screen");
+        - ota.http_request.flash:
+            url: !lambda return url;
+            md5_url: !lambda return md5_url;
+        - lambda: |-
+            id(ui).show_message("Update failed", "Check the screen's internet access");
+        - delay: 5s
+        - lambda: id(ui).hide_message();
+ota:
+  - platform: esphome
+  - platform: http_request
+
+wifi:
+  ap:
+    ssid: HA Controller
+captive_portal:
+improv_serial:
+
+external_components:
+  - source:
+      type: local
+      path: components

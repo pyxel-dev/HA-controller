@@ -1,0 +1,28 @@
+{
+  "layout": "reference",
+  "unit": "°C",
+  "entity_ids": [
+    "sensor.outdoor_temperature"
+  ],
+  "hass_states": {
+    "sensor.outdoor_temperature": {
+      "state": "12.345",
+      "attributes": {
+        "unit_of_measurement": "°C"
+      }
+    }
+  },
+  "registry_options": {
+    "sensor.outdoor_temperature": {
+      "sensor": {
+        "display_precision": 1
+      }
+    }
+  },
+  "updates": [
+    {
+      "id": "i3",
+      "text": "12.3 °C"
+    }
+  ]
+}

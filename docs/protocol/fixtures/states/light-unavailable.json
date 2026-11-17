@@ -1,0 +1,19 @@
+{
+  "layout": "reference",
+  "unit": "°C",
+  "entity_ids": [
+    "light.kitchen"
+  ],
+  "hass_states": {
+    "light.kitchen": {
+      "state": "unavailable",
+      "attributes": {}
+    }
+  },
+  "updates": [
+    {
+      "id": "b1",
+      "available": false
+    }
+  ]
+}

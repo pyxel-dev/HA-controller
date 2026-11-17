@@ -1,0 +1,29 @@
+{
+  "layout": "reference",
+  "unit": "°C",
+  "entity_ids": [
+    "climate.bedroom"
+  ],
+  "hass_states": {
+    "climate.bedroom": {
+      "state": "off",
+      "attributes": {
+        "temperature": null,
+        "current_temperature": null
+      }
+    }
+  },
+  "updates": [
+    {
+      "id": "b4",
+      "available": true,
+      "target": null,
+      "min": 7,
+      "max": 35,
+      "step": 0.5,
+      "unit": "°C",
+      "current": "—",
+      "action": "Off"
+    }
+  ]
+}

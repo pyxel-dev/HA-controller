@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HA Controller — Web installer</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f6f7f9;
+      --card: #ffffff;
+      --text: #1c1e21;
+      --muted: #5b616b;
+      --accent: #03a9f4;
+      --border: #dde1e6;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #111418;
+        --card: #1b1f25;
+        --text: #e8eaed;
+        --muted: #9aa3ad;
+        --border: #2d333b;
+      }
+    }
+    body {
+      margin: 0;
+      padding: 16px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      line-height: 1.5;
+    }
+    main {
+      max-width: 40rem;
+      margin: 0 auto;
+      padding: 24px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+    }
+    h1 { margin: 0 0 4px; font-size: 1.6rem; }
+    .subtitle { margin: 0 0 24px; color: var(--muted); }
+    a { color: var(--accent); }
+    ol { padding-left: 1.4rem; }
+    li { margin-bottom: 8px; }
+    .install { margin: 24px 0; }
+    .tip { color: var(--muted); font-size: 0.9rem; }
+  </style>
+  <script type="module" src="https://unpkg.com/esp-web-tools@10.5.2/dist/web/install-button.js?module"></script>
+</head>
+<body>
+  <main>
+    <h1>HA Controller</h1>
+    <p class="subtitle">
+      Firmware {{VERSION}} ·
+      <a href="https://github.com/pyxel-dev/HA-controller/releases/tag/v{{VERSION}}">Release notes</a>
+    </p>
+
+    <div class="install">
+      <esp-web-install-button manifest="firmware/manifest.json">
+        <span slot="unsupported">Use Chrome or Edge on a desktop computer.</span>
+        <span slot="not-allowed">Open this page over HTTPS.</span>
+      </esp-web-install-button>
+    </div>
+
+    <ol>
+      <li>Connect the screen to your computer with a USB-C cable.</li>
+      <li>Click Install and pick the serial port of the screen.</li>
+      <li>Set up Wi-Fi when asked, or join the "HA Controller" access point.</li>
+      <li>Add the screen in Home Assistant (ESPHome integration).</li>
+      <li>Install the HA Controller integration <strong>{{VERSION}}</strong> from HACS.</li>
+    </ol>
+
+    <p class="tip">If the board is not detected, hold BOOT while plugging it in.</p>
+  </main>
+</body>
+</html>

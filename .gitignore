@@ -1,1 +1,14 @@
 .DS_Store
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.venv*/
+node_modules/
+frontend/coverage/
+esphome/.esphome/
+esphome/secrets.yaml
+build/
+dist/
+site/
+.superpowers/
+esphome/.gitignore

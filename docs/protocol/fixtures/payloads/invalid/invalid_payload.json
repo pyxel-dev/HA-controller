@@ -1,0 +1,4 @@
+{
+  "expect": "invalid_payload",
+  "text": "{\"v\":1,\"rev\":\"x\",\"start\":\"b1\",\"blocks\":[{\"id\":\"b1\"}]}"
+}
