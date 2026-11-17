@@ -12,6 +12,7 @@ from custom_components.ha_controller.const import CONF_DEVICE_ID, DOMAIN, MANUFA
 
 NODE = "ha-controller-aabbcc"
 FIXTURES = Path(__file__).parents[3] / "docs" / "protocol" / "fixtures"
+VERSION = json.loads((Path(__file__).resolve().parents[1] / "manifest.json").read_text())["version"]
 
 
 async def register_screen(
@@ -50,7 +51,7 @@ def hello(device: dr.DeviceEntry, **overrides: Any) -> dict[str, Any]:
     data: dict[str, Any] = {
         "device_id": device.id,
         "node": NODE,
-        "version": "0.1.0",
+        "version": VERSION,
         "protocol": "1",
         "revision": "none",
         "reason": "connected",

@@ -14,14 +14,14 @@ from pytest_homeassistant_custom_component.common import (
 from custom_components.ha_controller.const import CONF_AUTO_UPDATE
 from custom_components.ha_controller.firmware import firmware_urls, is_release_version
 
-from .helpers import hello, register_screen, setup_screen
+from .helpers import VERSION, hello, register_screen, setup_screen
 
 ENTITY = "update.mock_title_ha_controller_firmware"
-URL = "https://pyxel-dev.github.io/HA-controller/firmware/0.1.0/ha-controller.ota.bin"
+URL = f"https://pyxel-dev.github.io/HA-controller/firmware/{VERSION}/ha-controller.ota.bin"
 
 
 def test_firmware_urls():
-    assert firmware_urls("0.1.0") == (URL, URL + ".md5")
+    assert firmware_urls(VERSION) == (URL, URL + ".md5")
 
 
 def test_is_release_version():
@@ -68,19 +68,19 @@ async def test_update_entity_reports_versions(hass):
     state = hass.states.get(ENTITY)
     assert state.state == "on"
     assert state.attributes["installed_version"] == "0.0.9"
-    assert state.attributes["latest_version"] == "0.1.0"
-    assert state.attributes["release_url"].endswith("/tag/v0.1.0")
+    assert state.attributes["latest_version"] == VERSION
+    assert state.attributes["release_url"].endswith(f"/tag/v{VERSION}")
 
 
 async def test_update_entity_off_when_versions_match(hass):
     device, _, _ = await start(hass)
-    await send_hello(hass, device, version="0.1.0")
+    await send_hello(hass, device, version=VERSION)
     assert hass.states.get(ENTITY).state == "off"
 
 
 async def test_newer_firmware_is_offered_as_update(hass):
     device, _, _ = await start(hass)
-    await send_hello(hass, device, version="0.2.0")
+    await send_hello(hass, device, version="999.0.0")
     assert hass.states.get(ENTITY).state == "on"
 
 
@@ -91,7 +91,7 @@ async def test_install_calls_device_and_completes_on_hello(hass):
     assert len(installs) == 1
     assert installs[0].data == {"url": URL, "md5_url": URL + ".md5"}
     assert hass.states.get(ENTITY).attributes["in_progress"] is True
-    await send_hello(hass, device, version="0.1.0")
+    await send_hello(hass, device, version=VERSION)
     await task
     state = hass.states.get(ENTITY)
     assert state.state == "off"
@@ -115,7 +115,7 @@ async def test_install_times_out(hass, freezer):
 async def test_install_when_offline_raises(hass):
     _, entry, installs = await start(hass)
     with pytest.raises(HomeAssistantError, match="offline"):
-        await entry.runtime_data.async_install_firmware("0.1.0")
+        await entry.runtime_data.async_install_firmware(VERSION)
     assert installs == []
 
 
@@ -124,9 +124,9 @@ async def test_install_while_in_progress_raises(hass):
     await send_hello(hass, device, version="0.0.9")
     task = await start_install(hass)
     with pytest.raises(HomeAssistantError, match="already running"):
-        await entry.runtime_data.async_install_firmware("0.1.0")
+        await entry.runtime_data.async_install_firmware(VERSION)
     assert len(installs) == 1
-    await send_hello(hass, device, version="0.1.0")
+    await send_hello(hass, device, version=VERSION)
     await task
 
 
@@ -144,14 +144,14 @@ async def test_auto_update_installs_at_most_once_per_hour(hass, freezer):
     freezer.tick(timedelta(seconds=3601 - 302))
     await send_hello(hass, device, version="0.0.9")  # 3601 s after the first attempt
     assert len(installs) == 2
-    await send_hello(hass, device, version="0.1.0")
+    await send_hello(hass, device, version=VERSION)
 
 
 async def test_auto_update_ignores_protocol_mismatch(hass):
     device, _, installs = await start(hass, auto_update=True)
     await send_hello(hass, device, version="0.0.9", protocol="2")
     assert len(installs) == 1
-    await send_hello(hass, device, version="0.1.0", protocol="2")
+    await send_hello(hass, device, version=VERSION, protocol="2")
 
 
 async def test_unload_ends_pending_install(hass):

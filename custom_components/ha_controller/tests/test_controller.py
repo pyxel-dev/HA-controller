@@ -15,7 +15,7 @@ from custom_components.ha_controller.const import DOMAIN
 from custom_components.ha_controller.controller import InvalidLayout
 from custom_components.ha_controller.layout import LayoutError
 
-from .helpers import NODE, hello, register_screen, setup_screen
+from .helpers import NODE, VERSION, hello, register_screen, setup_screen
 from .test_compiler import load_layout
 
 REFERENCE_REV = "90538742"
@@ -282,8 +282,8 @@ async def test_status_reports_device(hass):
         "title": entry.title,
         "device_id": device.id,
         "online": True,
-        "firmware_version": "0.1.0",
-        "integration_version": "0.1.0",
+        "firmware_version": VERSION,
+        "integration_version": VERSION,
         "protocol_ok": True,
         "revision": REFERENCE_REV,
         "device_revision": REFERENCE_REV,
