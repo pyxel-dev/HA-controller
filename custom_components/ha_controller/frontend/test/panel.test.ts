@@ -182,4 +182,110 @@ describe("ha-controller-panel", () => {
     await settle(el);
     expect(one(el, "ha-menu-button")).not.toBeNull();
   });
+
+  describe("screen state", () => {
+    const twoScreens = () => {
+      const {hass, callWS, real} = spied();
+      const info = (id: string, title: string) => ({
+        entry_id: id,
+        title,
+        device_id: `d-${id}`,
+        online: true,
+        firmware_version: "0.1.0",
+        integration_version: "0.1.0",
+        protocol_ok: true,
+        revision: "r1",
+        device_revision: "r1",
+      });
+      return {hass, callWS, real, info};
+    };
+
+    it("drops a save result when the screen changed meanwhile", async () => {
+      const {hass, callWS, real, info} = twoScreens();
+      let resolveSave: (v: unknown) => void = () => undefined;
+      callWS.mockImplementation((msg: {type: string; entry_id?: string}) => {
+        if (msg.type === "ha_controller/screens") return Promise.resolve({screens: [info("a", "A"), info("b", "B")]});
+        if (msg.type === "ha_controller/layout/save") return new Promise((r) => (resolveSave = r));
+        return real({...msg, type: msg.type});
+      });
+      const el = await open(hass);
+      await addBlockRight(el);
+      void (el as unknown as {onSave: () => Promise<void>}).onSave();
+      await settle(el);
+      await (el as unknown as {selectScreen: (id: string) => Promise<boolean>}).selectScreen("b");
+      await settle(el);
+      resolveSave({revision: "r2", pushed: true});
+      await settle(el);
+      expect(saveButton(el).disabled).toBe(true);
+      expect(one(el, ".notice")).toBeNull();
+      await click(el, one(el, "button.revert")!);
+      expect(blocks(el)).toHaveLength(4);
+    });
+
+    it("loads the layout on a later refresh when the first load failed", async () => {
+      vi.useFakeTimers();
+      const {hass, callWS, real} = spied();
+      let first = true;
+      callWS.mockImplementation((msg: {type: string}) => {
+        if (msg.type === "ha_controller/layout/get" && first) {
+          first = false;
+          return Promise.reject({code: "boom", message: "boom"});
+        }
+        return real(msg);
+      });
+      const el = await open(hass);
+      expect(one(el, "hc-grid")).toBeNull();
+      await vi.advanceTimersByTimeAsync(10_000);
+      await settle(el);
+      expect(blocks(el)).toHaveLength(4);
+    });
+
+    it("selects a screen that appears after an empty first load", async () => {
+      vi.useFakeTimers();
+      const {hass, callWS, real} = spied();
+      let empty = true;
+      callWS.mockImplementation((msg: {type: string}) =>
+        msg.type === "ha_controller/screens" && empty ? Promise.resolve({screens: []}) : real(msg),
+      );
+      const el = await open(hass);
+      expect(one(el, ".empty")).not.toBeNull();
+      empty = false;
+      await vi.advanceTimersByTimeAsync(10_000);
+      await settle(el);
+      expect(blocks(el)).toHaveLength(4);
+    });
+
+    it("disables the screen select while dirty", async () => {
+      const {hass, callWS, real, info} = twoScreens();
+      callWS.mockImplementation((msg: {type: string}) =>
+        msg.type === "ha_controller/screens" ? Promise.resolve({screens: [info("a", "A"), info("b", "B")]}) : real(msg),
+      );
+      const el = await open(hass);
+      const select = () => one<HTMLSelectElement>(el, "select")!;
+      expect(select().disabled).toBe(false);
+      await addBlockRight(el);
+      expect(select().disabled).toBe(true);
+      expect(select().title).toBe("Save or revert your changes first.");
+      await click(el, one(el, "button.revert")!);
+      expect(select().disabled).toBe(false);
+    });
+
+    it("puts the select back on the loaded screen when a switch fails", async () => {
+      const {hass, callWS, real, info} = twoScreens();
+      callWS.mockImplementation((msg: {type: string; entry_id?: string}) => {
+        if (msg.type === "ha_controller/screens") return Promise.resolve({screens: [info("a", "A"), info("b", "B")]});
+        if (msg.type === "ha_controller/layout/get" && msg.entry_id === "b") return Promise.reject({message: "nope"});
+        return real(msg);
+      });
+      const el = await open(hass);
+      const select = one<HTMLSelectElement>(el, "select")!;
+      expect(select.value).toBe("a");
+      select.value = "b";
+      select.dispatchEvent(new Event("change"));
+      await settle(el);
+      expect(select.value).toBe("a");
+      expect(one(el, ".notice")!.textContent).toContain("nope");
+      expect(blocks(el)).toHaveLength(4);
+    });
+  });
 });

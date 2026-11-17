@@ -180,24 +180,35 @@ export class HaControllerPanel extends LitElement {
       this.screens = await listScreens(this.hass);
     } catch {
       // A failed refresh keeps the previous status; the next tick tries again.
+      return;
     }
+    // A failed or empty first load leaves no screen selected: pick one now.
+    if (this.entryId === null && this.screens.length > 0) await this.selectScreen(this.screens[0].entry_id);
   }
 
-  private async selectScreen(entryId: string): Promise<void> {
+  /** Load a screen; resolves true when it is now the loaded one. */
+  private async selectScreen(entryId: string): Promise<boolean> {
     const token = ++this.loadToken;
     try {
       const layout = await getLayout(this.hass as Hass, entryId);
-      if (token !== this.loadToken) return;
+      if (token !== this.loadToken) return false;
       this.entryId = entryId;
       this.saved = layout;
       this.layout = layout;
       this.selectedId = layout.start ?? layout.blocks[0]?.id ?? null;
       this.notice = null;
+      return true;
     } catch (err) {
-      if (token !== this.loadToken) return;
+      if (token !== this.loadToken) return false;
       this.notice = {kind: "error", text: this.describe(err, UI.loadFailed)};
+      return false;
     }
   }
+
+  private onScreenChange = async (e: Event): Promise<void> => {
+    const select = e.target as HTMLSelectElement;
+    if (!(await this.selectScreen(select.value))) select.value = this.entryId ?? "";
+  };
 
   private describe(err: unknown, fallback: string): string {
     const message = (err as {message?: unknown} | null)?.message;
@@ -247,14 +258,16 @@ export class HaControllerPanel extends LitElement {
   private onSave = async (): Promise<void> => {
     if (!this.hass || !this.entryId || !this.layout || this.saving) return;
     const layout = this.layout;
+    const entryId = this.entryId;
     this.saving = true;
     try {
-      const result = await saveLayout(this.hass, this.entryId, layout);
+      const result = await saveLayout(this.hass, entryId, layout);
+      if (entryId !== this.entryId) return;
       this.saved = layout;
       this.notice = {kind: "ok", text: result.pushed ? UI.savedPushed : UI.savedOffline};
       void this.refreshScreens();
     } catch (err) {
-      this.notice = {kind: "error", text: this.saveError(err, layout)};
+      if (entryId === this.entryId) this.notice = {kind: "error", text: this.saveError(err, layout)};
     } finally {
       this.saving = false;
     }
@@ -292,6 +305,7 @@ export class HaControllerPanel extends LitElement {
 
   protected render() {
     const errors = this.errors;
+    const locked = this.dirty || this.saving;
     const canSave = this.dirty && errors.length === 0 && !this.saving;
     return html`
       <header>
@@ -301,7 +315,9 @@ export class HaControllerPanel extends LitElement {
           ? html`<select
               aria-label=${UI.screenSelect}
               .value=${this.entryId ?? ""}
-              @change=${(e: Event) => void this.selectScreen((e.target as HTMLSelectElement).value)}
+              ?disabled=${locked}
+              title=${locked ? UI.switchBlocked : ""}
+              @change=${this.onScreenChange}
             >
               ${this.screens.map(
                 (s) => html`<option value=${s.entry_id} ?selected=${s.entry_id === this.entryId}>${s.title}</option>`,

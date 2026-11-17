@@ -75,6 +75,7 @@ export const UI = {
   screenSelect: "Screen",
   revert: "Revert",
   save: "Save",
+  switchBlocked: "Save or revert your changes first.",
   noScreens: "No screens yet. Add the HA Controller integration and connect a screen.",
   loadFailed: "Could not load the screens.",
   saveFailed: "Could not save the layout.",
