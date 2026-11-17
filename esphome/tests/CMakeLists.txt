@@ -18,7 +18,8 @@ set(COMPONENT_DIR ${CMAKE_CURRENT_SOURCE_DIR}/../components/ha_controller)
 
 file(GLOB TEST_SOURCES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test_*.cpp)
 set(PURE_SOURCES
-  ${COMPONENT_DIR}/layout.cpp)
+  ${COMPONENT_DIR}/layout.cpp
+  ${COMPONENT_DIR}/states.cpp)
 
 add_executable(unit_tests ${TEST_SOURCES} ${PURE_SOURCES})
 target_include_directories(unit_tests PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../components)
