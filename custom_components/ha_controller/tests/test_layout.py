@@ -58,8 +58,7 @@ def test_fixture_sets_are_complete() -> None:
     assert VALID_LAYOUTS
     assert INVALID_LAYOUTS
     covered = {
-        json.loads(path.read_text(encoding="utf-8"))["expect"]["code"]
-        for path in INVALID_LAYOUTS
+        json.loads(path.read_text(encoding="utf-8"))["expect"]["code"] for path in INVALID_LAYOUTS
     }
     missing = sorted(SPEC_ERROR_CODES - covered)
     assert not missing, f"no invalid fixture for error codes: {missing}"
@@ -74,9 +73,7 @@ def test_valid_fixtures(path: Path) -> None:
 def test_invalid_fixtures(path: Path) -> None:
     case = json.loads(path.read_text(encoding="utf-8"))
     expect = case["expect"]
-    assert validate_layout(case["layout"], EMOJI) == [
-        LayoutError(expect["code"], expect["ref"])
-    ]
+    assert validate_layout(case["layout"], EMOJI) == [LayoutError(expect["code"], expect["ref"])]
 
 
 def test_connectivity_is_skipped_when_fields_are_invalid() -> None:

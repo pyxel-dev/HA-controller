@@ -28,9 +28,7 @@ async def test_screens_lists_entries(hass, hass_ws_client):
     await client.send_json_auto_id({"type": "ha_controller/screens"})
     msg = await client.receive_json()
     assert msg["success"]
-    assert msg["result"] == {
-        "screens": [first.runtime_data.status(), second.runtime_data.status()]
-    }
+    assert msg["result"] == {"screens": [first.runtime_data.status(), second.runtime_data.status()]}
 
 
 async def test_screens_skips_unloaded_entries(hass, hass_ws_client):
@@ -46,9 +44,7 @@ async def test_screens_skips_unloaded_entries(hass, hass_ws_client):
 async def test_layout_get_returns_stored_layout(hass, hass_ws_client):
     entry = await start(hass)
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "ha_controller/layout/get", "entry_id": entry.entry_id}
-    )
+    await client.send_json_auto_id({"type": "ha_controller/layout/get", "entry_id": entry.entry_id})
     msg = await client.receive_json()
     assert msg["success"]
     assert msg["result"] == {"layout": load_layout("reference")}
@@ -57,9 +53,7 @@ async def test_layout_get_returns_stored_layout(hass, hass_ws_client):
 async def test_layout_get_unknown_entry_returns_not_found(hass, hass_ws_client):
     assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "ha_controller/layout/get", "entry_id": "missing"}
-    )
+    await client.send_json_auto_id({"type": "ha_controller/layout/get", "entry_id": "missing"})
     msg = await client.receive_json()
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
@@ -70,9 +64,7 @@ async def test_layout_get_foreign_entry_returns_not_found(hass, hass_ws_client):
     other = MockConfigEntry(domain="other")
     other.add_to_hass(hass)
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "ha_controller/layout/get", "entry_id": other.entry_id}
-    )
+    await client.send_json_auto_id({"type": "ha_controller/layout/get", "entry_id": other.entry_id})
     msg = await client.receive_json()
     assert msg["error"]["code"] == "not_found"
 
@@ -81,9 +73,7 @@ async def test_layout_get_unloaded_entry_returns_not_found(hass, hass_ws_client)
     entry = await start(hass, saved=False)
     await hass.config_entries.async_unload(entry.entry_id)
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id(
-        {"type": "ha_controller/layout/get", "entry_id": entry.entry_id}
-    )
+    await client.send_json_auto_id({"type": "ha_controller/layout/get", "entry_id": entry.entry_id})
     msg = await client.receive_json()
     assert msg["error"]["code"] == "not_found"
 

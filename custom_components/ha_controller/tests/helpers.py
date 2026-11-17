@@ -37,9 +37,7 @@ async def register_screen(
 
 async def setup_screen(hass: HomeAssistant, device: dr.DeviceEntry) -> MockConfigEntry:
     """Add and set up the ha_controller entry for a screen device."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={CONF_DEVICE_ID: device.id}, unique_id=device.id
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_DEVICE_ID: device.id}, unique_id=device.id)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
