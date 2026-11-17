@@ -177,6 +177,8 @@ class ScreenController:
         self._pending.clear()
         for task in list(self._auto_tasks):
             task.cancel()
+        if self._install_waiter is not None and not self._install_waiter.done():
+            self._install_waiter.set_exception(HomeAssistantError("The integration was unloaded."))
         self._listeners.clear()
 
     @callback

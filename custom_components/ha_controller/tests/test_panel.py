@@ -1,5 +1,6 @@
 """Tests for the sidebar panel registration."""
 
+from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components import frontend
@@ -63,7 +64,10 @@ async def test_static_path_registered_once(hass: HomeAssistant) -> None:
 
 async def test_missing_bundle_warns(hass: HomeAssistant, caplog) -> None:
     """A missing bundle only logs a warning."""
-    entry = await setup_screen(hass, await register_screen(hass))
+    with patch(
+        "custom_components.ha_controller.panel.BUNDLE", Path("/nonexistent/ha-controller-panel.js")
+    ):
+        entry = await setup_screen(hass, await register_screen(hass))
 
     assert entry.state.name == "LOADED"
     assert "bundle" in caplog.text

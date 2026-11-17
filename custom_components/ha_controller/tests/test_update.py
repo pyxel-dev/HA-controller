@@ -131,16 +131,42 @@ async def test_install_while_in_progress_raises(hass):
 
 
 async def test_auto_update_installs_at_most_once_per_hour(hass, freezer):
-    device, _, installs = await start(hass, auto_update=True)
-    await send_hello(hass, device, version="0.0.9")
+    device, entry, installs = await start(hass, auto_update=True)
     await send_hello(hass, device, version="0.0.9")
     assert len(installs) == 1
-    freezer.tick(timedelta(seconds=3601))
+    freezer.tick(timedelta(seconds=301))
     async_fire_time_changed(hass)  # the first install gives up waiting
     await hass.async_block_till_done()
-    await send_hello(hass, device, version="0.0.9")
+    assert not entry.runtime_data.install_in_progress
+    freezer.tick(timedelta(seconds=1))
+    await send_hello(hass, device, version="0.0.9")  # inside the one hour window
+    assert len(installs) == 1
+    freezer.tick(timedelta(seconds=3601 - 302))
+    await send_hello(hass, device, version="0.0.9")  # 3601 s after the first attempt
     assert len(installs) == 2
     await send_hello(hass, device, version="0.1.0")
+
+
+async def test_auto_update_ignores_protocol_mismatch(hass):
+    device, _, installs = await start(hass, auto_update=True)
+    await send_hello(hass, device, version="0.0.9", protocol="2")
+    assert len(installs) == 1
+    await send_hello(hass, device, version="0.1.0", protocol="2")
+
+
+async def test_unload_ends_pending_install(hass):
+    device, entry, installs = await start(hass)
+    await send_hello(hass, device, version="0.0.9")
+    task = await start_install(hass)
+    controller = entry.runtime_data
+    assert controller.install_in_progress
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert task.done()  # ended without waiting for the 300 s timeout
+    with pytest.raises(HomeAssistantError, match="unloaded"):
+        await task
+    assert not controller.install_in_progress
+    assert controller._install_waiter is None
 
 
 async def test_auto_update_disabled_by_option(hass):
