@@ -40,17 +40,17 @@ export interface Cell {
   y: number;
 }
 
-/** Screen status as sent by the websocket API (spec section 8). */
+/** One screen as listed by `ha_controller/screens` (spec section 8). */
 export interface ScreenInfo {
+  entry_id: string;
+  title: string;
   device_id: string;
-  name: string;
   online: boolean;
   firmware_version: string | null;
-  battery: number | null;
-  charging: boolean | null;
-  brightness: number | null;
-  layout: Layout;
-  [key: string]: unknown;
+  integration_version: string;
+  protocol_ok: boolean | null;
+  revision: string;
+  device_revision: string | null;
 }
 
 export interface HassEntity {

@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>HA Controller panel (mock)</title>
+    <style>
+      body {
+        margin: 0;
+        font-family: Roboto, system-ui, sans-serif;
+        background: var(--primary-background-color, #fafafa);
+      }
+    </style>
+  </head>
+  <body>
+    <ha-controller-panel></ha-controller-panel>
+    <script type="module">
+      import "../src/ha-controller-panel.ts";
+      import {createMockHass} from "./mock-hass.ts";
+      const panel = document.querySelector("ha-controller-panel");
+      panel.narrow = window.innerWidth < 700;
+      panel.hass = createMockHass();
+    </script>
+  </body>
+</html>

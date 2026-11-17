@@ -40,7 +40,16 @@ The screen reports itself with ESPHome events. Open Developer tools › Events, 
 
 ## Panel
 
-Filled in by plan 3.
+The panel is TypeScript with Lit and Vite, in `custom_components/ha_controller/frontend/` (Node 24). Run these from the repository root:
+
+```bash
+npm --prefix custom_components/ha_controller/frontend ci              # install
+npm --prefix custom_components/ha_controller/frontend test            # unit and component tests
+npm --prefix custom_components/ha_controller/frontend run dev         # mock harness (dev/index.html) in the browser
+npm --prefix custom_components/ha_controller/frontend run build -- --watch   # rebuild dist/ while testing in Home Assistant
+```
+
+`npm run dev` serves the panel against `dev/mock-hass.ts`, an in-memory fake of the websocket API seeded with the reference layout. The production bundle is `frontend/dist/ha-controller-panel.js` (git-ignored); the integration serves it to the sidebar panel.
 
 ## Firmware
 

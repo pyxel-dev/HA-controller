@@ -2,6 +2,7 @@ import {LitElement, css, html, nothing} from "lit";
 import {property} from "lit/decorators.js";
 import {defineElement} from "../define";
 import {gridBounds, placeholders} from "../model/grid";
+import {UI} from "../messages";
 import {textColorFor} from "../model/color";
 import type {Layout} from "../types";
 
@@ -114,7 +115,7 @@ export class HcGrid extends LitElement {
           data-x=${c.x}
           data-y=${c.y}
           style=${place(c.x, c.y)}
-          aria-label="Add block"
+          aria-label=${UI.addBlock}
           @click=${() => this.emit("hc-add-block", {x: c.x, y: c.y})}
         >+</button>`,
       )}

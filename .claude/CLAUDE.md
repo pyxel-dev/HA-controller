@@ -47,6 +47,7 @@ npm --prefix custom_components/ha_controller/frontend ci
 npm --prefix custom_components/ha_controller/frontend test
 npm --prefix custom_components/ha_controller/frontend run typecheck
 npm --prefix custom_components/ha_controller/frontend run build
+npm --prefix custom_components/ha_controller/frontend run dev   # panel against a mock hass
 ```
 
 ## Skills and agents
