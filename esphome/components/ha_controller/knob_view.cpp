@@ -135,7 +135,7 @@ void KnobBlockView::centre_event_(lv_event_t *e) {
 
 // While the hold is active the latest update waits; loop() applies it once the hold has expired.
 void KnobBlockView::apply(const StateUpdate &u, uint32_t now_ms) {
-  if (this->hold_.active(now_ms)) {
+  if (this->hold_.active(now_ms) || lv_obj_has_state(this->arc_, LV_STATE_PRESSED)) {
     this->pending_ = u;
     this->has_pending_ = true;
     return;

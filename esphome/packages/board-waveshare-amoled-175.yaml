@@ -65,4 +65,16 @@ number:
     restore_value: true
     optimistic: true
     on_value:
-      - lambda: id(amoled).set_brightness((uint8_t) lroundf(x * 2.55f));
+      - if:
+          condition:
+            lambda: return !id(ui).is_sleeping();
+          then:
+            - script.execute: screen_on
+
+script:
+  - id: screen_on
+    then:
+      - lambda: id(amoled).set_brightness((uint8_t) lroundf(id(screen_brightness).state * 2.55f));
+  - id: screen_off
+    then:
+      - lambda: id(amoled).set_brightness(0);

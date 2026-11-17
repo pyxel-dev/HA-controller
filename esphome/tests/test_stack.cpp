@@ -28,12 +28,21 @@ TEST_CASE("stack: six items with the slider row last keep every control inside r
     CHECK(l.top[i] >= l.top[i - 1] + items[i - 1].height);
 }
 
-TEST_CASE("stack: slider row alone in the middle of tall text is shifted or reported") {
+TEST_CASE("stack: slider row alone in the middle of tall text is reported as not fitting") {
   std::vector<StackItem> items = {{60, 160, false}, {60, 160, false}, {60, 160, false},
                                   {60, 160, false}, {60, 160, false}, {40, 135, true}};
   auto l = layout_stack(items);
-  if (l.fits) {
-    for (size_t i = 0; i < items.size(); i++)
-      CHECK(inside(items[i], l.top[i], items[i].interactive ? 185 : 233));
-  }
+  CHECK_FALSE(l.fits);
+}
+
+TEST_CASE("stack: single-line capped labels fit where wrapped text does not") {
+  std::vector<StackItem> wrapped = {{60, 160, false}, {60, 160, false}, {60, 160, false},
+                                    {60, 160, false}, {60, 160, false}, {40, 135, true}};
+  std::vector<StackItem> capped = {{30, 160, false}, {30, 160, false}, {30, 160, false},
+                                   {30, 160, false}, {30, 160, false}, {40, 135, true}};
+  CHECK_FALSE(layout_stack(wrapped).fits);
+  auto l = layout_stack(capped);
+  CHECK(l.fits);
+  for (size_t i = 0; i < capped.size(); i++)
+    CHECK(inside(capped[i], l.top[i], capped[i].interactive ? 185 : 233));
 }

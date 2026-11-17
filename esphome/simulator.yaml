@@ -56,3 +56,11 @@ number:
     step: 1
     initial_value: 80
     optimistic: true
+
+script:
+  - id: screen_on
+    then:
+      - logger.log: screen_on
+  - id: screen_off
+    then:
+      - logger.log: screen_off

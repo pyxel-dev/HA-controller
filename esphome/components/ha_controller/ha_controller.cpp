@@ -46,7 +46,27 @@ void HaController::setup() {
   this->refresh_mode_();
 }
 
+void WakeListener::release() { this->parent_->wake(); }
+
+void HaController::wake() {
+  if (!this->sleeping_)
+    return;
+  this->sleeping_ = false;
+  ESP_LOGD(TAG, "Waking");
+  for (auto &cb : this->wake_callbacks_)
+    cb();
+  lv_display_trigger_activity(nullptr);  // restart the inactivity timer
+}
+
 void HaController::loop() {
+  if (!this->sleeping_ && should_sleep(lv_display_get_inactive_time(nullptr), this->sleep_timeout_s_)) {
+    this->sleeping_ = true;
+    ESP_LOGD(TAG, "Sleeping");
+    for (auto &cb : this->sleep_callbacks_)
+      cb();
+  }
+  if (this->sleeping_)
+    return;  // LVGL is paused; layouts and states still apply through set_layout / set_states
   uint32_t now = millis();
   for (auto &view : this->views_)
     view->loop(now);
@@ -71,6 +91,7 @@ void HaController::set_layout(const std::string &json) {
     return;
   }
   this->layout_ = std::move(parsed);
+  this->set_sleep_timeout(this->layout_.sleep_s);
   this->has_layout_ = true;
   ESP_LOGI(TAG, "Layout %s applied (%u blocks)", this->layout_.rev.c_str(), (unsigned) this->layout_.blocks.size());
   this->rebuild_views_();
@@ -129,6 +150,7 @@ void HaController::refresh_mode_() {
 }
 
 void HaController::show_message(const std::string &title, const std::string &detail) {
+  this->wake();
   this->pager_.set_enabled(false);
   if (this->overlay_ == nullptr) {
     this->overlay_ = lv_obj_create(lv_layer_top());

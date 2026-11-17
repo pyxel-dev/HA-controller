@@ -102,6 +102,14 @@ ha_controller:
   battery_level: battery_level
   battery_charging: battery_charging
   screen_brightness: screen_brightness
+  touchscreen: touch
+  on_sleep:
+    - script.execute: screen_off
+    - lvgl.pause
+  on_wake:
+    - lvgl.resume
+    - lvgl.widget.redraw
+    - script.execute: screen_on
   on_control:
     - homeassistant.event:
         event: esphome.ha_controller_control

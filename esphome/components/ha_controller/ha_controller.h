@@ -8,17 +8,31 @@
 #include "esphome/components/font/font.h"
 #include "esphome/components/number/number.h"
 #include "esphome/components/sensor/sensor.h"
+#include "esphome/components/touchscreen/touchscreen.h"
 #include "esphome/core/automation.h"
 #include "esphome/core/component.h"
 
 #include "layout.h"
 #include "pager.h"
+#include "sleep.h"
 #include "widgets.h"
 
 namespace esphome {
 namespace ha_controller {
 
 enum class FontRole : uint8_t { TEXT, VALUE, EMOJI };
+
+class HaController;
+
+// Wakes the screen when a touch is released while it sleeps.
+class WakeListener : public touchscreen::TouchListener {
+ public:
+  explicit WakeListener(HaController *parent) : parent_(parent) {}
+  void release() override;
+
+ protected:
+  HaController *parent_;
+};
 
 class HaController : public Component, public ControlSink {
  public:
@@ -35,6 +49,12 @@ class HaController : public Component, public ControlSink {
   void set_battery_sensor(sensor::Sensor *s) { this->local_.battery = s; }
   void set_charging_sensor(binary_sensor::BinarySensor *s) { this->local_.charging = s; }
   void set_brightness_number(number::Number *n) { this->local_.brightness = n; }
+  void set_touchscreen(touchscreen::Touchscreen *ts) { ts->register_listener(&this->wake_listener_); }
+  void set_sleep_timeout(uint32_t seconds) { this->sleep_timeout_s_ = seconds; }
+  bool is_sleeping() const { return this->sleeping_; }
+  void wake();
+  void add_on_sleep_callback(std::function<void()> &&cb) { this->sleep_callbacks_.push_back(std::move(cb)); }
+  void add_on_wake_callback(std::function<void()> &&cb) { this->wake_callbacks_.push_back(std::move(cb)); }
   void add_on_control_callback(std::function<void(std::string, std::string, std::string, float)> &&cb) {
     this->control_callbacks_.push_back(std::move(cb));
   }
@@ -63,6 +83,25 @@ class HaController : public Component, public ControlSink {
   lv_obj_t *title_label_{nullptr};
   lv_obj_t *detail_label_{nullptr};
   std::vector<std::function<void(std::string, std::string, std::string, float)>> control_callbacks_;
+  std::vector<std::function<void()>> sleep_callbacks_;
+  std::vector<std::function<void()>> wake_callbacks_;
+  WakeListener wake_listener_{this};
+  uint32_t sleep_timeout_s_{DEFAULT_SLEEP_S};
+  bool sleeping_{false};
+};
+
+class SleepTrigger : public Trigger<> {
+ public:
+  explicit SleepTrigger(HaController *parent) {
+    parent->add_on_sleep_callback([this]() { this->trigger(); });
+  }
+};
+
+class WakeTrigger : public Trigger<> {
+ public:
+  explicit WakeTrigger(HaController *parent) {
+    parent->add_on_wake_callback([this]() { this->trigger(); });
+  }
 };
 
 class ControlTrigger : public Trigger<std::string, std::string, std::string, float> {

@@ -65,6 +65,8 @@ void Pager::attach(lv_obj_t *screen, int size, int edge_width) {
 
 void Pager::on_edge_event_(lv_event_t *e) {
   auto *self = static_cast<Pager *>(lv_event_get_user_data(e));
+  if (lv_event_get_code(e) == LV_EVENT_DELETE)
+    return;
   switch (lv_event_get_code(e)) {
     case LV_EVENT_HIT_TEST: {
       lv_hit_test_info_t *info = lv_event_get_hit_test_info(e);
