@@ -8,7 +8,7 @@ It is a custom integration with a sidebar panel, an ESPHome firmware and a GitHu
 - English only: code, comments, docs and commit messages.
 - One version for the whole repository. Change it only with `.github/scripts/.venv/bin/python .github/scripts/versioning.py bump X.Y.Z`; `.github/scripts/.venv/bin/python .github/scripts/versioning.py check [--tag vX.Y.Z]` verifies it (CI job `versions`).
 - The protocol is defined in `docs/protocol/README.md` and pinned by `docs/protocol/fixtures/`.
-- The repository root holds no files except README.md, hacs.json and .gitignore. Put every new file in the folder that owns it (see the repository map).
+- The repository root holds no files except README.md, LICENSE, hacs.json and .gitignore. Put every new file in the folder that owns it (see the repository map).
 - TDD: write the failing test first, then the code.
 - Never commit `esphome/secrets.yaml`.
 - Specs and plans live in `docs/superpowers/`.
