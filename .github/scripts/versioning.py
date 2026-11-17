@@ -26,7 +26,15 @@ ESPHOME = Path("esphome/version.yaml")
 FRONTEND = Path("custom_components/ha_controller/frontend/package.json")
 FRONTEND_LOCK = Path("custom_components/ha_controller/frontend/package-lock.json")
 
+SOURCE_PATHS = {
+    "manifest": MANIFEST,
+    "esphome": ESPHOME,
+    "frontend": FRONTEND,
+    "frontend-lock": FRONTEND_LOCK,
+}
+
 ESPHOME_LINE_RE = re.compile(r'^(\s*project_version:\s*")([^"]*)(")', re.MULTILINE)
+MANIFEST_VERSION_RE = re.compile(r'^(\s*"version"\s*:\s*")([^"]*)(")', re.MULTILINE)
 
 
 def _read_json(path: Path) -> dict:
@@ -69,8 +77,8 @@ def _collect(root: Path) -> tuple[dict[str, str], list[str]]:
     for key, reader in READERS.items():
         try:
             values[key] = reader(root)
-        except (OSError, ValueError, KeyError) as exc:
-            errors.append(f"{key}: cannot read version ({exc})")
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            errors.append(f"{key} ({SOURCE_PATHS[key]}): cannot read version ({exc})")
     return values, errors
 
 
@@ -88,14 +96,14 @@ def check_versions(root: Path, tag: str | None = None) -> list[str]:
 
     for key, value in values.items():
         if not VERSION_RE.fullmatch(value):
-            errors.append(f"{key} version {value!r} is not SemVer X.Y.Z")
+            errors.append(f"{key} ({SOURCE_PATHS[key]}) version {value!r} is not SemVer X.Y.Z")
 
     if values:
         # The first source (manifest) wins a tie, so the reference is stable.
         expected, _ = Counter(values.values()).most_common(1)[0]
         for key, value in values.items():
             if value != expected:
-                errors.append(f"{key} is {value}, expected {expected}")
+                errors.append(f"{key} ({SOURCE_PATHS[key]}) is {value}, expected {expected}")
 
         if tag is not None and tag != f"v{expected}":
             errors.append(f"tag {tag} does not match version v{expected}")
@@ -105,13 +113,30 @@ def check_versions(root: Path, tag: str | None = None) -> list[str]:
     return errors
 
 
+def _bump_manifest_text(text: str, version: str) -> str:
+    """Replace only the top-level version value, leaving every other byte unchanged."""
+    old = json.loads(text)
+    if not isinstance(old, dict) or "version" not in old:
+        raise ValueError(f"{MANIFEST}: top-level version not found")
+
+    match = MANIFEST_VERSION_RE.search(text)
+    if match is None:
+        raise ValueError(f"{MANIFEST}: top-level version not found")
+    new_text = text[: match.start(2)] + version + text[match.end(2) :]
+
+    # Guard against matching a nested "version" key: the only change must be the top-level one.
+    if json.loads(new_text) != {**old, "version": version}:
+        raise ValueError(f"{MANIFEST}: could not locate the top-level version safely")
+    return new_text
+
+
 def bump_version(root: Path, version: str) -> None:
     """Write version to every source. Nothing is written unless all sources can be updated."""
     if not VERSION_RE.fullmatch(version):
         raise ValueError(f"version {version!r} is not SemVer X.Y.Z")
 
-    manifest = _read_json(root / MANIFEST)
-    manifest["version"] = version
+    manifest_text = (root / MANIFEST).read_text(encoding="utf-8", newline="")
+    manifest_new = _bump_manifest_text(manifest_text, version)
 
     frontend = _read_json(root / FRONTEND)
     frontend["version"] = version
@@ -125,9 +150,9 @@ def bump_version(root: Path, version: str) -> None:
         lambda match: f"{match.group(1)}{version}{match.group(3)}", esphome_text, count=1
     )
     if count != 1:
-        raise ValueError("project_version not found")
+        raise ValueError(f"{ESPHOME}: project_version not found")
 
-    _write_json(root / MANIFEST, manifest)
+    (root / MANIFEST).write_text(manifest_new, encoding="utf-8", newline="")
     _write_json(root / FRONTEND, frontend)
     _write_json(root / FRONTEND_LOCK, lock)
     (root / ESPHOME).write_text(esphome_new, encoding="utf-8")
@@ -145,19 +170,19 @@ def main(argv: list[str] | None = None) -> int:
 
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
 
-    if args.command == "check":
-        errors = check_versions(REPO_ROOT, args.tag)
-        for error in errors:
-            print(error, file=sys.stderr)
-        if errors:
-            return 1
-        print(f"versions consistent: {next(iter(read_versions(REPO_ROOT).values()))}")
-        return 0
-
     try:
+        if args.command == "check":
+            errors = check_versions(REPO_ROOT, args.tag)
+            if errors:
+                for error in errors:
+                    print(error, file=sys.stderr)
+                return 1
+            print(f"versions consistent: {next(iter(read_versions(REPO_ROOT).values()))}")
+            return 0
+
         bump_version(REPO_ROOT, args.version)
-    except ValueError as exc:
-        print(exc, file=sys.stderr)
+    except (OSError, ValueError, KeyError, TypeError) as exc:
+        print(f"error: {exc}", file=sys.stderr)
         return 1
     print(f"version bumped to {args.version}")
     return 0

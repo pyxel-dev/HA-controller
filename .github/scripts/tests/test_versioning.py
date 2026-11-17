@@ -20,6 +20,22 @@ def _json(data: dict) -> str:
     return json.dumps(data, indent=2) + "\n"
 
 
+def _manifest(version: str) -> str:
+    # Same shape as the real manifest: inline arrays that json.dumps would reflow.
+    return (
+        "{\n"
+        '  "domain": "ha_controller",\n'
+        '  "name": "HA Controller",\n'
+        '  "after_dependencies": ["esphome"],\n'
+        '  "codeowners": ["@pyxel-dev"],\n'
+        '  "config_flow": true,\n'
+        '  "dependencies": ["frontend", "http", "panel_custom", "websocket_api"],\n'
+        '  "requirements": [],\n'
+        f'  "version": "{version}"\n'
+        "}\n"
+    )
+
+
 def _yaml(version: str) -> str:
     return (
         "substitutions:\n"
@@ -33,9 +49,7 @@ def _yaml(version: str) -> str:
 @pytest.fixture
 def repo(tmp_path: Path) -> Path:
     files = {
-        MANIFEST: _json(
-            {"domain": "ha_controller", "name": "HA Controller", "version": "0.1.0"}
-        ),
+        MANIFEST: _manifest("0.1.0"),
         ESPHOME: _yaml("0.1.0"),
         FRONTEND: _json({"name": "ha-controller-panel", "version": "0.1.0", "private": True}),
         FRONTEND_LOCK: _json(
@@ -72,8 +86,17 @@ def test_check_reports_mismatch(repo):
 
     assert len(errors) == 1
     assert "manifest" in errors[0]
+    assert MANIFEST in errors[0]
     assert "0.2.0" in errors[0]
     assert "0.1.0" in errors[0]
+
+
+def test_check_errors_name_file_path_for_unreadable_source(repo):
+    (repo / ESPHOME).unlink()
+
+    errors = check_versions(repo)
+
+    assert any("esphome" in error and ESPHOME in error for error in errors)
 
 
 def test_check_tag_must_match(repo):
@@ -101,7 +124,8 @@ def test_bump_rewrites_all(repo):
     assert check_versions(repo) == []
 
     manifest = json.loads((repo / MANIFEST).read_text(encoding="utf-8"))
-    assert manifest == {"domain": "ha_controller", "name": "HA Controller", "version": "1.2.3"}
+    assert manifest["version"] == "1.2.3"
+    assert manifest["dependencies"] == ["frontend", "http", "panel_custom", "websocket_api"]
 
     frontend = json.loads((repo / FRONTEND).read_text(encoding="utf-8"))
     assert frontend == {"name": "ha-controller-panel", "version": "1.2.3", "private": True}
@@ -114,8 +138,17 @@ def test_bump_rewrites_all(repo):
     assert yaml_after == before_yaml.replace('project_version: "0.1.0"', 'project_version: "1.2.3"')
     assert '  device_name: "ha-controller"' in yaml_after
 
-    for relative in (MANIFEST, FRONTEND, FRONTEND_LOCK):
+    for relative in (FRONTEND, FRONTEND_LOCK):
         assert (repo / relative).read_text(encoding="utf-8").endswith("}\n")
+
+
+def test_bump_changes_only_manifest_version_text(repo):
+    before = (repo / MANIFEST).read_text(encoding="utf-8")
+
+    bump_version(repo, "1.2.3")
+
+    after = (repo / MANIFEST).read_text(encoding="utf-8")
+    assert after == before.replace('"version": "0.1.0"', '"version": "1.2.3"')
 
 
 @pytest.mark.parametrize("bad", ["1.2", "v1.2.3", "1.2.3-rc1"])
@@ -139,3 +172,35 @@ def test_main_exit_codes(repo, monkeypatch):
     assert set(read_versions(repo).values()) == {"0.3.0"}
     assert main(["check"]) == 0
     assert main(["bump", "0.3"]) == 1
+
+
+@pytest.mark.parametrize(
+    ("relative", "content"),
+    [
+        (MANIFEST, "{ not json"),
+        (MANIFEST, "[]"),
+        (MANIFEST, '{"domain": "ha_controller"}'),
+        (FRONTEND_LOCK, "[]"),
+        (FRONTEND_LOCK, '{"version": "0.1.0"}'),
+        (ESPHOME, "substitutions: {}\n"),
+    ],
+)
+@pytest.mark.parametrize("argv", [["check"], ["bump", "1.2.3"]])
+def test_main_reports_malformed_files_without_traceback(
+    repo, monkeypatch, capsys, relative, content, argv
+):
+    monkeypatch.setattr(versioning, "REPO_ROOT", repo)
+    (repo / relative).write_text(content, encoding="utf-8")
+
+    assert main(argv) == 1
+
+    assert capsys.readouterr().err.strip()
+
+
+def test_main_reports_missing_file_without_traceback(repo, monkeypatch, capsys):
+    monkeypatch.setattr(versioning, "REPO_ROOT", repo)
+    (repo / FRONTEND).unlink()
+
+    assert main(["check"]) == 1
+    assert main(["bump", "1.2.3"]) == 1
+    assert FRONTEND in capsys.readouterr().err
