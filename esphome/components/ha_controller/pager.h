@@ -39,7 +39,6 @@ class Pager {
   const PageRef *page_at_(int x, int y) const;
   const PageRef *current_page_() const;
   void place_(int offset);
-  void settle_(bool commit);
   void finish_(bool commit);
   void abort_swipe_();
   void refresh_hints_();

@@ -1,5 +1,6 @@
 #include "pager.h"
 
+// Needed for the lv_hit_test_info_t body (LV_EVENT_HIT_TEST); relies on the pinned LVGL 9.5 layout.
 #include <src/core/lv_obj_event_private.h>
 
 namespace esphome {
@@ -98,8 +99,11 @@ const PageRef *Pager::current_page_() const {
 }
 
 void Pager::on_pressed_() {
-  if (!this->enabled_ || this->animating_ || this->tracker_.active())
+  if (!this->enabled_ || this->animating_)
     return;
+  // A fresh press while a swipe is still tracked means the release was lost: drop the stale swipe.
+  if (this->tracker_.active())
+    this->abort_swipe_();
   const PageRef *cur = this->current_page_();
   lv_indev_t *indev = lv_indev_active();
   if (cur == nullptr || indev == nullptr)
