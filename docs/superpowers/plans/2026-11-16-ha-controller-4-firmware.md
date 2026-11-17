@@ -112,7 +112,7 @@ TEST_CASE("text colour follows colors.json") { /* every entry: text_color_for(bg
 
 - [ ] **Step 3: Run the tests to verify they fail**
 
-Run: `cmake -S esphome/tests -B build/tests && cmake --build build/tests`
+Run: `cmake -S esphome/tests -B esphome/tests/build && cmake --build esphome/tests/build`
 Expected: FAIL (`layout.h` not found).
 
 - [ ] **Step 4: Implement `layout.cpp` and `color.h`.**
@@ -123,7 +123,7 @@ Expected: FAIL (`layout.h` not found).
 
 - [ ] **Step 5: Run the tests to verify they pass**
 
-Run: `cmake --build build/tests && ctest --test-dir build/tests --output-on-failure`
+Run: `cmake --build esphome/tests/build && ctest --test-dir esphome/tests/build --output-on-failure`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
@@ -193,14 +193,14 @@ h.touch(0xFFFFFF00u); CHECK(h.active(0x00000100u));                             
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `cmake --build build/tests`
+Run: `cmake --build esphome/tests/build`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement the five headers and `states.cpp`.**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cmake --build build/tests && ctest --test-dir build/tests --output-on-failure`
+Run: `cmake --build esphome/tests/build && ctest --test-dir esphome/tests/build --output-on-failure`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -261,14 +261,14 @@ CHECK(settle_duration_ms(466, 466) == 220); CHECK(settle_duration_ms(0, 466) == 
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `cmake --build build/tests`
+Run: `cmake --build esphome/tests/build`
 Expected: FAIL.
 
 - [ ] **Step 3: Implement `gesture.cpp`.** Keep a small ring buffer of `(t, progress)` samples, including the `begin` sample. On release, velocity = `(progress_now − progress_old) / (t_now − t_old)`, where `old` is the oldest sample inside `velocity_window_ms`. Use unsigned time differences.
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cmake --build build/tests && ctest --test-dir build/tests --output-on-failure`
+Run: `cmake --build esphome/tests/build && ctest --test-dir esphome/tests/build --output-on-failure`
 Expected: PASS.
 
 - [ ] **Step 5: Commit**
@@ -318,14 +318,14 @@ CHECK(battery_percent(87) == 87.0f); CHECK(battery_percent(150) == 100.0f);
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `cmake --build build/tests`
+Run: `cmake --build esphome/tests/build`
 Expected: FAIL (`axp2101_regs.h` not found).
 
 - [ ] **Step 3: Implement `axp2101_regs.h`, the `axp2101_battery` component (`__init__.py`, `.h`, `.cpp`) and the CMake include path**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cmake --build build/tests && ctest --test-dir build/tests --output-on-failure`
+Run: `cmake --build esphome/tests/build && ctest --test-dir esphome/tests/build --output-on-failure`
 Expected: PASS.
 
 - [ ] **Step 5: Write the YAML.**
@@ -437,7 +437,7 @@ Expected: `SUCCESS`, and the image fits the app partition (ESPHome sizes it for 
 
 - [ ] **Step 8: Add the firmware CI.** In `.github/workflows/firmware.yml`, workflow `Firmware`:
   - Triggers: `push` to `main` and `pull_request`, on paths `esphome/**`, `docs/protocol/**`, `custom_components/ha_controller/emoji.json` and `.github/workflows/firmware.yml`.
-  - Job `host-tests`: `cmake -S esphome/tests -B build/tests`, `cmake --build build/tests`, `ctest --test-dir build/tests --output-on-failure`.
+  - Job `host-tests`: `cmake -S esphome/tests -B esphome/tests/build`, `cmake --build esphome/tests/build`, `ctest --test-dir esphome/tests/build --output-on-failure`.
   - Job `compile`:
     - `actions/setup-python@v5` with Python 3.13;
     - `actions/cache@v4` on `~/.platformio` and `esphome/.esphome`, keyed on `hashFiles('esphome/requirements.txt', 'esphome/**/*.yaml')`;
@@ -722,14 +722,14 @@ CHECK_FALSE(should_sleep(3'599'999, 3600)); CHECK(should_sleep(3'600'000, 3600))
 
 - [ ] **Step 2: Run the tests to verify they fail**
 
-Run: `cmake --build build/tests`
+Run: `cmake --build esphome/tests/build`
 Expected: FAIL (`sleep.h` not found).
 
 - [ ] **Step 3: Implement `sleep.h`**
 
 - [ ] **Step 4: Run the tests to verify they pass**
 
-Run: `cmake --build build/tests && ctest --test-dir build/tests --output-on-failure`
+Run: `cmake --build esphome/tests/build && ctest --test-dir esphome/tests/build --output-on-failure`
 Expected: PASS.
 
 - [ ] **Step 5: Implement the component additions and the YAML wiring, then compile both configs**
@@ -864,7 +864,7 @@ Expected: `SUCCESS`.
 
 - [ ] **Step 5: Run every suite**
 
-Run: `pytest custom_components/ha_controller/tests && pytest .github/scripts/tests && npm --prefix custom_components/ha_controller/frontend test && ctest --test-dir build/tests --output-on-failure`
+Run: `pytest custom_components/ha_controller/tests && pytest .github/scripts/tests && npm --prefix custom_components/ha_controller/frontend test && ctest --test-dir esphome/tests/build --output-on-failure`
 Expected: PASS.
 
 - [ ] **Step 6: Commit**
