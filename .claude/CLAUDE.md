@@ -49,6 +49,11 @@ cmake -S esphome/tests -B esphome/tests/build && cmake --build esphome/tests/bui
 ctest --test-dir esphome/tests/build --output-on-failure
 esphome/.venv/bin/esphome compile esphome/ha-controller.yaml
 
+# Firmware (needs SDL2 for the simulator: brew install sdl2 / apt install libsdl2-dev)
+esphome/.venv/bin/esphome compile esphome/ha-controller.yaml
+esphome/.venv/bin/esphome compile esphome/simulator.yaml
+esphome/.venv/bin/esphome run esphome/simulator.yaml   # desktop simulator, API on port 6053
+
 # Panel (Node 24, run from the repository root)
 npm --prefix custom_components/ha_controller/frontend ci
 npm --prefix custom_components/ha_controller/frontend test
