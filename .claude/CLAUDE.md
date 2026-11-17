@@ -69,6 +69,7 @@ npm --prefix custom_components/ha_controller/frontend run dev   # panel against 
 - Skill `protocol-change` (`.claude/skills/protocol-change/`): checklist for any change that crosses the Home Assistant ↔ screen boundary.
 - Skill `firmware-dev` (`.claude/skills/firmware-dev/`): commands, simulator loop and rules for the ESPHome firmware and LVGL code.
 - Skill `add-widget` (`.claude/skills/add-widget/`): end-to-end checklist for a new block widget or custom item kind.
+- Skill `release` (`.claude/skills/release/`): cutting a release and changing the release pipeline (versions, workflow, Pages installer, HACS packaging, OTA URLs).
 - Agent `firmware-reviewer` (`.claude/agents/firmware-reviewer.md`): reviews changes under `esphome/` for ESPHome/LVGL correctness, memory and hardware safety.
 - Agent `protocol-guardian` (`.claude/agents/protocol-guardian.md`): reviews a diff for protocol consistency across docs, fixtures, Python, TypeScript and C++.
 - Agent `ha-integration-reviewer` (`.claude/agents/ha-integration-reviewer.md`): reviews integration changes against Home Assistant development rules.

@@ -12,6 +12,13 @@ Status: under active development.
 
 See the [documentation](docs/README.md).
 
+## Install
+
+1. Flash the firmware from the web installer: <https://pyxel-dev.github.io/HA-controller/> (Chrome or Edge).
+2. In HACS, add the custom repository `https://github.com/pyxel-dev/HA-controller` (type Integration) and install the same version.
+
+See [Getting started](docs/getting-started.md) for the full steps and the [documentation](docs/README.md).
+
 ## 3D models
 
 You can find two 3D models, with or without power button, in the [3D_models](3D_models) folder. Each model is available as STL or 3MF.
