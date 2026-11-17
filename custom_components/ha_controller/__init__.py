@@ -1,6 +1,7 @@
 """The HA Controller integration."""
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
@@ -14,6 +15,8 @@ from .store import LayoutStore
 from .websocket import async_register_websocket
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+PLATFORMS = [Platform.UPDATE]
 
 type HaControllerConfigEntry = ConfigEntry[ScreenController]
 
@@ -37,11 +40,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HaControllerConfigEntry)
     await controller.async_start()
     entry.runtime_data = controller
     await async_register_panel(hass, controller.integration_version)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: HaControllerConfigEntry) -> bool:
     """Unload one screen."""
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
     await entry.runtime_data.async_stop()
     others = [
         other

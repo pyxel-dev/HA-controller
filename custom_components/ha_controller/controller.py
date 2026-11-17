@@ -1,5 +1,6 @@
 """Per-screen controller: owns the layout and keeps the screen in sync."""
 
+import asyncio
 import logging
 from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
@@ -15,11 +16,15 @@ from homeassistant.util import dt as dt_util
 
 from .compiler import compile_layout, encode_payload
 from .const import (
+    ACTION_INSTALL_FIRMWARE,
     ACTION_SET_LAYOUT,
     ACTION_SET_STATES,
+    AUTO_UPDATE_RETRY,
+    CONF_AUTO_UPDATE,
     CONF_DEVICE_ID,
     EVENT_CONTROL,
     EVENT_HELLO,
+    INSTALL_TIMEOUT,
     MAX_PAYLOAD_BYTES,
     ONLINE_TIMEOUT,
     PROTOCOL_VERSION,
@@ -27,6 +32,7 @@ from .const import (
     STATE_COALESCE_SECONDS,
 )
 from .controls import resolve_control
+from .firmware import firmware_urls, is_release_version
 from .layout import LayoutError, bound_entities, empty_layout, validate_layout
 from .states import build_updates, chunk_updates
 from .store import LayoutStore
@@ -99,6 +105,11 @@ class ScreenController:
         self._cancel_flush: CALLBACK_TYPE | None = None
         self._pending: set[str] = set()
         self._first_hello_seen = False
+        self._install_in_progress = False
+        self._install_target: str | None = None
+        self._install_waiter: asyncio.Future[None] | None = None
+        self._auto_attempts: dict[str, datetime] = {}
+        self._auto_tasks: set[asyncio.Task[None]] = set()
 
     @property
     def device_id(self) -> str:
@@ -119,6 +130,10 @@ class ScreenController:
     @property
     def integration_version(self) -> str:
         return self._integration_version
+
+    @property
+    def install_in_progress(self) -> bool:
+        return self._install_in_progress
 
     async def async_start(self) -> None:
         """Load the layout and subscribe to the screen and its entities."""
@@ -160,6 +175,8 @@ class ScreenController:
             self._cancel_flush()
             self._cancel_flush = None
         self._pending.clear()
+        for task in list(self._auto_tasks):
+            task.cancel()
         self._listeners.clear()
 
     @callback
@@ -240,8 +257,15 @@ class ScreenController:
             protocol=_parse_protocol(data.get("protocol")),
             last_seen=dt_util.utcnow(),
         )
-        for cb in list(self._listeners):
-            cb()
+        version = self._device.version
+        if (
+            self._install_waiter is not None
+            and not self._install_waiter.done()
+            and version == self._install_target
+        ):
+            self._install_waiter.set_result(None)
+        self._notify_listeners()
+        self._maybe_auto_update()
         if self._device.protocol != PROTOCOL_VERSION:
             return
         first_hello = not self._first_hello_seen
@@ -252,6 +276,68 @@ class ScreenController:
                 await self.async_push_layout()
         elif connected:
             await self.async_push_states()
+
+    def _maybe_auto_update(self) -> None:
+        """Start an automatic firmware install when the screen runs another version."""
+        version = self._integration_version
+        if (
+            not self.entry.options.get(CONF_AUTO_UPDATE, True)
+            or not is_release_version(version)
+            or self._device.version is None
+            or self._device.version == version
+            or self._install_in_progress
+        ):
+            return
+        now = dt_util.utcnow()
+        last = self._auto_attempts.get(version)
+        if last is not None and now - last < AUTO_UPDATE_RETRY:
+            return
+        self._auto_attempts[version] = now
+        task = self.hass.async_create_background_task(
+            self._async_auto_install(version), f"ha_controller auto update {self.entry.title}"
+        )
+        self._auto_tasks.add(task)
+        task.add_done_callback(self._auto_tasks.discard)
+
+    async def _async_auto_install(self, version: str) -> None:
+        try:
+            await self.async_install_firmware(version)
+        except HomeAssistantError as err:
+            _LOGGER.warning("Automatic firmware update of %s failed: %s", self.entry.title, err)
+
+    async def async_install_firmware(self, version: str) -> None:
+        """Install a firmware version and wait until the screen reports it."""
+        if not self._device.online():
+            raise HomeAssistantError("The screen is offline.")
+        if self._install_in_progress:
+            raise HomeAssistantError("A firmware update is already running.")
+        self._install_in_progress = True
+        self._install_target = version
+        waiter = self.hass.loop.create_future()
+        self._install_waiter = waiter
+        self._notify_listeners()
+        try:
+            url, md5_url = firmware_urls(version)
+            if not await self.async_call_device(
+                ACTION_INSTALL_FIRMWARE, {"url": url, "md5_url": md5_url}
+            ):
+                raise HomeAssistantError("The screen did not accept the firmware update.")
+            try:
+                async with asyncio.timeout(INSTALL_TIMEOUT):
+                    await waiter
+            except TimeoutError:
+                raise HomeAssistantError(
+                    f"Firmware update to {version} did not complete."
+                ) from None
+        finally:
+            self._install_in_progress = False
+            self._install_target = None
+            self._install_waiter = None
+            self._notify_listeners()
+
+    def _notify_listeners(self) -> None:
+        for cb in list(self._listeners):
+            cb()
 
     async def _async_hello_event(self, event: Event) -> None:
         await self.async_handle_hello(event.data)

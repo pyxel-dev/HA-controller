@@ -15,5 +15,23 @@
     "abort": {
       "already_configured": "This screen is already set up."
     }
+  },
+  "entity": {
+    "update": {
+      "firmware": {
+        "name": "HA Controller firmware"
+      }
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HA Controller options",
+        "description": "Installs the firmware that matches this integration's version whenever the screen reports a different one.",
+        "data": {
+          "auto_update": "Update the screen firmware automatically"
+        }
+      }
+    }
   }
 }
