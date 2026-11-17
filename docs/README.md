@@ -5,3 +5,4 @@
 - [Device protocol v1](protocol/README.md): the normative layout model and device protocol, pinned by `docs/protocol/fixtures/`.
 - [Development](development.md): environments, tests and running a development Home Assistant.
 - [Configuration](configuration.md): how to edit the screens in the HA Controller panel.
+- [Hardware](hardware.md): the board, pins, power, performance settings and enclosures.

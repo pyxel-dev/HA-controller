@@ -17,9 +17,25 @@ esphome:
     version: ${project_version}
 
 logger:
+http_request:
+  verify_ssl: true
 api:
+  actions:
+    - action: install_firmware
+      variables: {url: string, md5_url: string}
+      then:
+        - lambda: |-
+            id(ui).show_message("Updating firmware…", "Do not unplug the screen");
+        - ota.http_request.flash:
+            url: !lambda return url;
+            md5_url: !lambda return md5_url;
+        - lambda: |-
+            id(ui).show_message("Update failed", "Check the screen's internet access");
+        - delay: 5s
+        - lambda: id(ui).hide_message();
 ota:
   - platform: esphome
+  - platform: http_request
 
 wifi:
   ap:

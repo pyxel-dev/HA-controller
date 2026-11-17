@@ -11,3 +11,4 @@ build/
 dist/
 site/
 .superpowers/
+esphome/.gitignore
