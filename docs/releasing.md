@@ -14,7 +14,7 @@
 4. Watch the "Release" workflow.
 5. Check that the Pages installer shows X.Y.Z and that HACS offers X.Y.Z.
 
-The workflow builds the panel, packages `ha_controller.zip`, compiles the firmware, creates the GitHub release with the zip and the firmware files, then rebuilds the GitHub Pages site with every released firmware.
+The workflow builds the panel, packages `ha_controller.zip`, compiles the firmware, rebuilds and deploys the GitHub Pages site with the new firmware and every earlier released firmware, and only then creates the GitHub release with the zip and the firmware files. Pages is deployed before the release so that the `firmware/<version>/ha-controller.ota.bin` URLs already exist when HACS offers the new version; otherwise the first automatic update would get a 404.
 
 ## Dry runs
 

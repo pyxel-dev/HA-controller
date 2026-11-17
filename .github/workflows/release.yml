@@ -65,8 +65,51 @@ jobs:
           name: dist
           path: dist
 
-  release:
+  pages:
     needs: build
+    if: github.ref_type == 'tag'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: dist
+      - name: Add the firmware of this version
+        run: |
+          mkdir -p "releases/${{ needs.build.outputs.version }}"
+          cp dist/ha-controller-* "releases/${{ needs.build.outputs.version }}/"
+      - name: Download the firmware of every earlier release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          for tag in $(gh release list --limit 200 --json tagName -q '.[].tagName'); do
+            if [ "$tag" = "$GITHUB_REF_NAME" ]; then continue; fi
+            if ! gh release download "$tag" -p 'ha-controller-*' -D "releases/${tag#v}"; then
+              echo "No firmware downloaded for $tag, skipping it"
+              rm -rf "releases/${tag#v}"
+            fi
+          done
+      - name: Build the site
+        run: >
+          python .github/scripts/build_pages.py --web esphome/web --releases releases
+          --latest "${{ needs.build.outputs.version }}" --out site
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+  release:
+    needs: [build, pages]
     if: github.ref_type == 'tag'
     runs-on: ubuntu-latest
     steps:
@@ -81,33 +124,3 @@ jobs:
         run: >
           gh release create "$GITHUB_REF_NAME" dist/*
           --title "$GITHUB_REF_NAME" --generate-notes --verify-tag
-
-  pages:
-    needs: [build, release]
-    if: github.ref_type == 'tag'
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.14"
-      - name: Download every release firmware
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          for tag in $(gh release list --limit 200 --json tagName -q '.[].tagName'); do
-            gh release download "$tag" -p 'ha-controller-*' -D "releases/${tag#v}"
-          done
-      - name: Build the site
-        run: >
-          python .github/scripts/build_pages.py --web esphome/web --releases releases
-          --latest "${{ needs.build.outputs.version }}" --out site
-      - uses: actions/configure-pages@v5
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - id: deployment
-        uses: actions/deploy-pages@v4

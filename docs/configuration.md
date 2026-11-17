@@ -49,4 +49,5 @@ Save and Revert are enabled once you change something. Save is disabled while th
 - 6 items per custom block
 - 32 characters per block name
 - 64 characters per text
-- 64 emoji per layout, from the supported emoji set
+- 64 supported emoji; only emoji from that set can be used
+- 24 KB (24,576 bytes) for the whole layout once compiled for the screen. A layout above that limit is refused when you save it

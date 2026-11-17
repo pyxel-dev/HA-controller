@@ -20,8 +20,10 @@ Dry runs use `workflow_dispatch` (only the `build` job runs).
 ## What each job produces
 
 - `build`: `dist/ha_controller.zip` (integration with the built panel, for HACS) and `dist/ha-controller-X.Y.Z.*` (factory image, OTA image and OTA md5), uploaded as the `dist` artifact.
-- `release`: the GitHub release with every file of `dist`. Tag runs only.
-- `pages`: the installer site, built from `esphome/web` and the firmware of every release. Tag runs only.
+- `pages`: the installer site, built from `esphome/web`, the firmware of this version (from `dist`) and the firmware of every earlier release (releases without firmware assets are skipped). Tag runs only, after `build`.
+- `release`: the GitHub release with every file of `dist`. Tag runs only, after `pages`.
+
+The order is `build` → `pages` → `release`. Pages is deployed before the release so the OTA URLs exist when HACS offers the new version.
 
 ## Rules
 
