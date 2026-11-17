@@ -42,16 +42,32 @@ class LightView final : public KnobBlockView {
       int b = *u.brightness;
       b = b < 0 ? 0 : (b > 100 ? 100 : b);
       bool on = u.on.value_or(b > 0) && b > 0;
+      this->on_ = on;
+      if (b > 0)
+        this->last_brightness_ = b;
       lv_arc_set_value(this->arc_, on ? b : 0);
       this->show_percent_(on ? b : 0);
     } else {
-      this->style_toggle_(u.on.value_or(false));
+      this->on_ = u.on.value_or(false);
+      this->style_toggle_(this->on_);
     }
   }
 
   void on_arc_changed_(int value) override { this->show_percent_(value); }
   void on_arc_released_(int value) override { this->sink_.on_control(this->id_, "", "set", (float) value); }
-  void on_centre_tap_() override { this->sink_.on_control(this->id_, "", "toggle", 0); }
+  // Local feedback right away; the hold only defers incoming states.
+  void on_centre_tap_() override {
+    this->sink_.on_control(this->id_, "", "toggle", 0);
+    this->on_ = !this->on_;
+    if (this->dimmable_) {
+      int b = this->on_ ? (this->last_brightness_ > 0 ? this->last_brightness_ : 100) : 0;
+      lv_arc_set_value(this->arc_, b);
+      this->show_percent_(b);
+    } else {
+      this->style_toggle_(this->on_);
+    }
+    this->layout_centre_();
+  }
 
   void show_percent_(int value) {
     if (value <= 0) {
@@ -87,6 +103,8 @@ class LightView final : public KnobBlockView {
   }
 
   bool dimmable_{true};
+  bool on_{false};
+  int last_brightness_{0};
 };
 
 }  // namespace

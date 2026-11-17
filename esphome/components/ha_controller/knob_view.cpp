@@ -102,6 +102,8 @@ void KnobBlockView::set_disabled_(bool disabled) {
 }
 
 void KnobBlockView::arc_event_(lv_event_t *e) {
+  if (lv_event_get_code(e) == LV_EVENT_DELETE)
+    return;
   auto *self = static_cast<KnobBlockView *>(lv_event_get_user_data(e));
   if (!self->available_)
     return;
@@ -143,7 +145,7 @@ void KnobBlockView::apply(const StateUpdate &u, uint32_t now_ms) {
 }
 
 void KnobBlockView::loop(uint32_t now_ms) {
-  if (this->has_pending_ && !this->hold_.active(now_ms)) {
+  if (this->has_pending_ && !this->hold_.active(now_ms) && !lv_obj_has_state(this->arc_, LV_STATE_PRESSED)) {
     this->has_pending_ = false;
     this->draw_(this->pending_);
   }
