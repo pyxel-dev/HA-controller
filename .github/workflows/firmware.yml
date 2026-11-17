@@ -1,0 +1,41 @@
+name: Firmware
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "esphome/**"
+      - "docs/protocol/**"
+      - "custom_components/ha_controller/emoji.json"
+      - ".github/workflows/firmware.yml"
+  pull_request:
+    paths:
+      - "esphome/**"
+      - "docs/protocol/**"
+      - "custom_components/ha_controller/emoji.json"
+      - ".github/workflows/firmware.yml"
+
+jobs:
+  host-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: cmake -S esphome/tests -B esphome/tests/build
+      - run: cmake --build esphome/tests/build
+      - run: ctest --test-dir esphome/tests/build --output-on-failure
+
+  compile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.platformio
+            esphome/.esphome
+          key: esphome-${{ hashFiles('esphome/requirements.txt', 'esphome/**/*.yaml') }}
+      - run: pip install -r esphome/requirements.txt
+      - run: esphome compile esphome/ha-controller.yaml

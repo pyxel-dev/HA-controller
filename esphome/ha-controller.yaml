@@ -1,0 +1,33 @@
+substitutions:
+  name: ha-controller
+  friendly_name: HA Controller
+
+packages:
+  version: !include version.yaml
+  board: !include packages/board-waveshare-amoled-175.yaml
+  ui: !include packages/ui.yaml
+
+esphome:
+  name: ${name}
+  friendly_name: ${friendly_name}
+  name_add_mac_suffix: true
+  min_version: 2026.10.0
+  project:
+    name: pyxel-dev.ha-controller
+    version: ${project_version}
+
+logger:
+api:
+ota:
+  - platform: esphome
+
+wifi:
+  ap:
+    ssid: HA Controller
+captive_portal:
+improv_serial:
+
+external_components:
+  - source:
+      type: local
+      path: components

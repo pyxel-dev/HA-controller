@@ -1,0 +1,68 @@
+esphome:
+  platformio_options:
+    board_build.flash_mode: dio
+    board_build.f_flash: 80000000L
+    board_build.f_cpu: 240000000L
+esp32:
+  variant: esp32s3
+  flash_size: 16MB
+  framework:
+    type: esp-idf
+psram:
+  mode: octal
+  speed: 80MHz
+external_components:
+  - source:
+      type: git
+      url: https://github.com/shelson/esphome-cst9217
+      ref: ab90a2289824240b01d1d69d8d08a1d06e6b1cb3
+    components: [cst9217]
+i2c:
+  - id: bus_a
+    sda: GPIO15
+    scl: GPIO14
+    frequency: 400kHz
+spi:
+  - id: display_qspi
+    type: quad
+    clk_pin: GPIO38
+    data_pins: [GPIO4, GPIO5, GPIO6, GPIO7]
+display:
+  - platform: mipi_spi
+    id: amoled
+    model: CO5300
+    bus_mode: quad
+    reset_pin: GPIO39
+    cs_pin: GPIO12
+    dimensions: {width: 466, height: 466}
+    auto_clear_enabled: false
+    update_interval: never
+touchscreen:
+  - platform: cst9217
+    id: touch
+    display: amoled
+    interrupt_pin: GPIO11
+    reset_pin: GPIO40
+    transform: {mirror_x: true, mirror_y: true}
+    on_touch:
+      - logger.log: {level: DEBUG, format: "touch x=%d y=%d", args: [touch.x, touch.y]}
+axp2101_battery:
+  i2c_id: bus_a
+  battery_level: {id: battery_level, name: Battery}
+  battery_voltage: {name: Battery voltage}
+  charging: {id: battery_charging, name: Charging}
+number:
+  - platform: template
+    id: screen_brightness
+    name: Screen brightness
+    icon: mdi:brightness-6
+    entity_category: config
+    unit_of_measurement: "%"
+    min_value: 5
+    max_value: 100
+    step: 1
+    initial_value: 80
+    restore_value: true
+    optimistic: true
+    on_value:
+      - lambda: id(amoled).set_brightness((uint8_t) lroundf(x * 2.55f));

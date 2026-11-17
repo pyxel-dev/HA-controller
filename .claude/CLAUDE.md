@@ -42,6 +42,13 @@ custom_components/.venv/bin/pip install -r custom_components/requirements_test.t
 custom_components/.venv/bin/pytest custom_components/ha_controller/tests
 custom_components/.venv/bin/ruff check custom_components
 
+# Firmware (own venv, run from the repository root)
+python3.13 -m venv esphome/.venv
+esphome/.venv/bin/pip install -r esphome/requirements.txt
+cmake -S esphome/tests -B esphome/tests/build && cmake --build esphome/tests/build
+ctest --test-dir esphome/tests/build --output-on-failure
+esphome/.venv/bin/esphome compile esphome/ha-controller.yaml
+
 # Panel (Node 24, run from the repository root)
 npm --prefix custom_components/ha_controller/frontend ci
 npm --prefix custom_components/ha_controller/frontend test

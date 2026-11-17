@@ -1,0 +1,93 @@
+font:
+  - id: font_s
+    file: {type: gfonts, family: Inter, weight: 600}
+    size: 20
+    bpp: 4
+    glyphsets: [GF_Latin_Core]
+  - id: font_m
+    file: {type: gfonts, family: Inter, weight: 600}
+    size: 28
+    bpp: 4
+    glyphsets: [GF_Latin_Core]
+  - id: font_l
+    file: {type: gfonts, family: Inter, weight: 600}
+    size: 40
+    bpp: 4
+    glyphsets: [GF_Latin_Core]
+  - id: font_xl
+    file: {type: gfonts, family: Inter, weight: 600}
+    size: 56
+    bpp: 4
+    glyphsets: [GF_Latin_Core]
+  - id: value_s
+    file: {type: gfonts, family: Inter, weight: 600}
+    size: 40
+    bpp: 4
+    glyphs: " 0123456789.,-+%°CFOfn—"
+  - id: value_m
+    file: {type: gfonts, family: Inter, weight: 600}
+    size: 56
+    bpp: 4
+    glyphs: " 0123456789.,-+%°CFOfn—"
+  - id: value_l
+    file: {type: gfonts, family: Inter, weight: 600}
+    size: 72
+    bpp: 4
+    glyphs: " 0123456789.,-+%°CFOfn—"
+  - id: value_xl
+    file: {type: gfonts, family: Inter, weight: 600}
+    size: 96
+    bpp: 4
+    glyphs: " 0123456789.,-+%°CFOfn—"
+  - id: emoji_s
+    file: {type: gfonts, family: Noto Emoji}
+    size: 32
+    bpp: 4
+    glyphs: !include ../../custom_components/ha_controller/emoji.json
+  - id: emoji_m
+    file: {type: gfonts, family: Noto Emoji}
+    size: 48
+    bpp: 4
+    glyphs: !include ../../custom_components/ha_controller/emoji.json
+  - id: emoji_l
+    file: {type: gfonts, family: Noto Emoji}
+    size: 64
+    bpp: 4
+    glyphs: !include ../../custom_components/ha_controller/emoji.json
+  - id: emoji_xl
+    file: {type: gfonts, family: Noto Emoji}
+    size: 88
+    bpp: 4
+    glyphs: !include ../../custom_components/ha_controller/emoji.json
+lvgl:
+  displays: [amoled]
+  touchscreens: [touch]
+  buffer_size: 25%
+  bg_color: 0x000000
+  pages:
+    - id: boot_page
+      widgets:
+        - label:
+            align: center
+            y: -40
+            text: HA Controller
+            text_font: font_m
+            text_color: 0xFFFFFF
+        - label:
+            align: center
+            y: 10
+            text: v${project_version}
+            text_font: font_s
+            text_color: 0x9CA3AF
+        - label:
+            align: center
+            y: 70
+            text: "💡"
+            text_font: emoji_m
+            text_color: 0xFFFFFF
+        - arc:
+            id: keep_arc
+            hidden: true
+        - slider:
+            id: keep_slider
+            hidden: true
