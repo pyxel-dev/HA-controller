@@ -1,8 +1,8 @@
 from esphome import automation
 import esphome.codegen as cg
 from esphome.components import binary_sensor, font, number, sensor
-import esphome.config_validation as cv
 from esphome.components.lvgl.defines import add_lv_use
+import esphome.config_validation as cv
 from esphome.const import CONF_ID, CONF_SIZE, CONF_TRIGGER_ID
 
 CODEOWNERS = ["@pyxel-dev"]

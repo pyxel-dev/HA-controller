@@ -36,6 +36,7 @@ sensor:
   - platform: template
     id: battery_level
     name: Battery
+    update_interval: 5s
     unit_of_measurement: "%"
     lambda: return 76.0;
 

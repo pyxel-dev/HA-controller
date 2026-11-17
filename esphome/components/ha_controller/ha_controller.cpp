@@ -33,6 +33,7 @@ void HaController::setup() {
   lv_obj_set_style_bg_color(this->screen_, lv_color_black(), 0);
   lv_obj_set_style_bg_opa(this->screen_, LV_OPA_COVER, 0);
   lv_screen_load(this->screen_);
+  this->pager_.attach(this->screen_, this->theme_.size, this->theme_.edge_width);
 
   // Local sources are subscribed once here and forwarded to the live view.
   if (this->local_.battery != nullptr)
@@ -46,13 +47,14 @@ void HaController::setup() {
 }
 
 void HaController::loop() {
-  if (this->view_)
-    this->view_->loop(millis());
+  uint32_t now = millis();
+  for (auto &view : this->views_)
+    view->loop(now);
 }
 
 void HaController::on_local_update_() {
-  if (this->view_)
-    this->view_->on_local_update();
+  for (auto &view : this->views_)
+    view->on_local_update();
 }
 
 void HaController::set_layout(const std::string &json) {
@@ -70,22 +72,28 @@ void HaController::set_layout(const std::string &json) {
   }
   this->layout_ = std::move(parsed);
   this->has_layout_ = true;
-  if (this->layout_.find(this->current_id_) == nullptr)
-    this->current_id_ = this->layout_.start;
-  if (this->layout_.find(this->current_id_) == nullptr && !this->layout_.blocks.empty())
-    this->current_id_ = this->layout_.blocks.front().id;
   ESP_LOGI(TAG, "Layout %s applied (%u blocks)", this->layout_.rev.c_str(), (unsigned) this->layout_.blocks.size());
   this->rebuild_views_();
   this->refresh_mode_();
 }
 
 void HaController::rebuild_views_() {
-  this->view_.reset();
-  const Block *block = this->layout_.find(this->current_id_);
-  if (block != nullptr)
-    this->view_ = make_block_view(this->screen_, *block, this->theme_, *this, this->local_);
-  if (this->overlay_ != nullptr)
-    lv_obj_move_foreground(this->overlay_);
+  // Keep the block on screen when it still exists, else the start block, else the first one.
+  std::string show = this->pager_.current_id();
+  if (this->layout_.find(show) == nullptr)
+    show = this->layout_.start;
+  if (this->layout_.find(show) == nullptr && !this->layout_.blocks.empty())
+    show = this->layout_.blocks.front().id;
+  // The pager forgets the old pages (and cancels any swipe or animation) before their objects are deleted.
+  this->pager_.set_pages({}, "");
+  this->views_.clear();
+  std::vector<PageRef> pages;
+  for (const auto &block : this->layout_.blocks) {
+    auto view = make_block_view(this->pager_.viewport(), block, this->theme_, *this, this->local_);
+    pages.push_back({block.id, block.x, block.y, view->root()});
+    this->views_.push_back(std::move(view));
+  }
+  this->pager_.set_pages(std::move(pages), show);
 }
 
 void HaController::set_states(const std::string &json) {
@@ -94,12 +102,13 @@ void HaController::set_states(const std::string &json) {
     ESP_LOGW(TAG, "Invalid states payload");
     return;
   }
-  if (!this->view_)
-    return;
+  // Every view receives its states, visible or not: the integration does not resend them on navigation.
   uint32_t now = millis();
   for (const auto &u : updates) {
-    if (this->view_->owns(u.id))
-      this->view_->apply(u, now);
+    for (auto &view : this->views_) {
+      if (view->owns(u.id))
+        view->apply(u, now);
+    }
   }
 }
 
@@ -112,12 +121,15 @@ void HaController::refresh_mode_() {
     this->show_message("Waiting for Home Assistant", detail);
   } else if (this->layout_.blocks.empty()) {
     this->show_message("No blocks yet", "Add blocks in Home Assistant \xE2\x80\xBA HA Controller");
-  } else if (this->overlay_ != nullptr) {
-    lv_obj_add_flag(this->overlay_, LV_OBJ_FLAG_HIDDEN);
+  } else {
+    if (this->overlay_ != nullptr)
+      lv_obj_add_flag(this->overlay_, LV_OBJ_FLAG_HIDDEN);
+    this->pager_.set_enabled(true);
   }
 }
 
 void HaController::show_message(const std::string &title, const std::string &detail) {
+  this->pager_.set_enabled(false);
   if (this->overlay_ == nullptr) {
     this->overlay_ = lv_obj_create(lv_layer_top());
     lv_obj_remove_style_all(this->overlay_);

@@ -47,7 +47,6 @@ python3.13 -m venv esphome/.venv
 esphome/.venv/bin/pip install -r esphome/requirements.txt
 cmake -S esphome/tests -B esphome/tests/build && cmake --build esphome/tests/build
 ctest --test-dir esphome/tests/build --output-on-failure
-esphome/.venv/bin/esphome compile esphome/ha-controller.yaml
 
 # Firmware (needs SDL2 for the simulator: brew install sdl2 / apt install libsdl2-dev)
 esphome/.venv/bin/esphome compile esphome/ha-controller.yaml

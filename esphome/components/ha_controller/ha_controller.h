@@ -12,6 +12,7 @@
 #include "esphome/core/component.h"
 
 #include "layout.h"
+#include "pager.h"
 #include "widgets.h"
 
 namespace esphome {
@@ -55,8 +56,8 @@ class HaController : public Component, public ControlSink {
   LocalSources local_;
   Layout layout_;
   bool has_layout_{false};
-  std::string current_id_;
-  std::unique_ptr<BlockView> view_;
+  Pager pager_;
+  std::vector<std::unique_ptr<BlockView>> views_;
   lv_obj_t *screen_{nullptr};
   lv_obj_t *overlay_{nullptr};
   lv_obj_t *title_label_{nullptr};
